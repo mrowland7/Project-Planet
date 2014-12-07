@@ -179,9 +179,9 @@ HEADERS += mainwindow.h \
 
 FORMS += mainwindow.ui
 
-#LIBS += -L/course/cs123/lib/glew/glew-1.10.0/include -lGLEW
-#INCLUDEPATH += /course/cs123/lib/glew/glew-1.10.0/include
-#DEPENDPATH += /course/cs123/lib/glew/glew-1.10.0/include
+LIBS += -L/course/cs123/lib/glew/glew-1.10.0/include -lGLEW
+INCLUDEPATH += /course/cs123/lib/glew/glew-1.10.0/include
+DEPENDPATH += /course/cs123/lib/glew/glew-1.10.0/include
 unix:!macx {
     LIBS += -L/home/mike/development/glew-1.11.0/lib -lGLEW
     INCLUDEPATH+=/home/mike/development/glew-1.11.0/include
@@ -197,3 +197,6 @@ macx {
 OTHER_FILES += \
     shaders/shader.frag \
     shaders/shader.vert
+
+RESOURCES += \
+    shaders/shaders.qrc

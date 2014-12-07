@@ -1,8 +1,9 @@
 #include "view.h"
 #include <QApplication>
 #include <QKeyEvent>
-#include "sphere.h"
+#include "shapes/sphere.h"
 #include "camera/CamtransCamera.h"
+#include "ResourceLoader.h"
 
 View::View(QWidget *parent) : QGLWidget(parent)
 {
@@ -53,8 +54,11 @@ void View::initializeGL()
       fprintf(stderr, "Error initializing glew: %s\n", glewGetErrorString(err));
     }
 
+    m_shader = ResourceLoader::loadShaders(
+            ":/shaders/shader.vert",
+            ":/shaders/shader.frag");
     // Initialize terrain here
-    m_scene = new ShapesScene();
+//    m_scene = new ShapesScene();
     // Enable depth testing, so that objects are occluded based on depth instead of drawing order.
     glEnable(GL_DEPTH_TEST);
 
@@ -70,20 +74,68 @@ void View::initializeGL()
     // Specify that the front face is represented by vertices in counterclockwise order (this is
     // the default).
     glFrontFace(GL_CCW);
-    m_camera = new CamtransCamera();
-    m_defaultPerspectiveCamera->orientLook(
-                glm::vec4(2.f, 2.f, 2.f, 1.f),
-                glm::vec4(-1.f, -1.f, -1.f, 0.f),
-                glm::vec4(0.f, 1.f, 0.f, 0.f));
+    initSquare();
+//    m_camera = new CamtransCamera();
 }
 
 void View::paintGL()
 {
+    glClearColor(0.05, 0.1, 0.2, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glUseProgram(m_shader);
 
+    glm::mat4 m4 = glm::mat4(1.0f);
+    glUniform3f(glGetUniformLocation(m_shader, "color"), 1, 0, 0);
+    glUniformMatrix4fv(glGetUniformLocation(m_shader, "mvp"), 1, GL_FALSE, &m4[0][0]);
     // TODO: Implement the demo rendering here
-    m_scene->render(m_camera);
+//    m_scene->render(m_camera);
+    glBindVertexArray(m_vaoID);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
 }
+
+void View::initSquare() {
+    // Step 1: Create GLfloat array of vertices that will draw a square. This should involve 6 vertices
+    // Here is an example that contains the vertices of an isosceles triangle
+    GLuint vertexLocation = glGetAttribLocation(m_shader, "position");
+
+    GLfloat vertexBufferData[] = {
+        0.5f, -0.5f, 0.0f,
+        0.5f, 0.5f, 0.0f,
+       -0.5f, 0.5f, 0.0f,
+       -0.5f, -0.5f, 0.0f,
+        0.5f, -0.5f, 0.0f,
+       -0.5f, 0.5f, 0.0f,
+    };
+
+    // Step 2: initialize and bind a Vertex Array Object -- see glGenVertexArrays and glBindVertexArray
+    glGenVertexArrays(1, &m_vaoID);
+    glBindVertexArray(m_vaoID);
+
+
+    // Step 3: initialize and bind a buffer for your vertex data -- see glGenBuffers and glBindBuffer
+    GLuint buffer;
+    glGenBuffers(1, &buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    // Step 4: Send your vertex data to the GPU -- see glBufferData
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexBufferData), vertexBufferData, GL_STATIC_DRAW);
+
+    // Step 5: Expose the vertices to other OpenGL components (namely, shaders)
+    //         -- see glEnableVertexAttribArray and glVertexAttribPointer
+    glEnableVertexAttribArray(vertexLocation);
+    glVertexAttribPointer(vertexLocation,
+                          3,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          0,
+                          (void*) 0);
+
+    // Step 6: Clean up -- unbind the buffer and vertex array.
+    //         It is a good habit to leave the state of OpenGL the way you found it
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
 
 void View::resizeGL(int w, int h)
 {

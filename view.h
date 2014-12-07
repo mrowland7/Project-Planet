@@ -31,8 +31,12 @@ private:
     void keyPressEvent(QKeyEvent *event);
     void keyReleaseEvent(QKeyEvent *event);
 
+    void initSquare();
+
     ShapesScene* m_scene;
     CamtransCamera* m_camera;
+    GLuint m_shader;
+    GLuint m_vaoID;
 
 private slots:
     void tick();

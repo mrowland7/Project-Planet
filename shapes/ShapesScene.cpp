@@ -26,8 +26,9 @@ ShapesScene::ShapesScene()
 
     //TODO: [SHAPES] Allocate any additional memory you need...
     init();
-    m_currShape = new Sphere(100, 100);
-    m_currShape->initOpenglData(m_shader);
+    m_currShape = NULL;
+//    m_currShape = new Sphere(100, 100);
+//    m_currShape->initOpenglData(m_shader);
 }
 
 ShapesScene::~ShapesScene()
@@ -51,6 +52,55 @@ void ShapesScene::init()
 
     OpenGLScene::init(); // Call the superclass's init()
 
+    // Initialize the vertex array object.
+    glGenVertexArrays(1, &m_vaoID);
+    glBindVertexArray(m_vaoID);
+
+    // Initialize the vertex buffer object.
+    GLuint vertexBuffer;
+    glGenBuffers(1, &vertexBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+
+    // Remember for large arrays you should use new
+    GLfloat vertexData[] = {
+        -1, -1, 0, // Position 1
+        0,  0, 1, // Normal 1
+        1, -1, 0, // Position 2
+        0,  0, 1, // Normal 2
+        0, 1, 0,  // Position 3
+        0, 0, 1,   // Normal 3
+        1, -1, 0, // Position 2
+        0,  0, 1, // Normal 2
+        -1, -1, 0, // Position 1
+        0,  0, 1, // Normal 1
+        0, 1, 0,  // Position 3
+        0, 0, 1   // Normal 3
+   };
+
+   // Pass vertex data to OpenGL.
+   glBufferData(GL_ARRAY_BUFFER, 6 * 6 * sizeof(GLfloat), vertexData, GL_STATIC_DRAW);
+   glEnableVertexAttribArray(glGetAttribLocation(m_shader, "position"));
+   glEnableVertexAttribArray(glGetAttribLocation(m_shader, "normal"));
+   glVertexAttribPointer(
+       glGetAttribLocation(m_shader, "position"),
+       3,                   // Num coordinates per position
+       GL_FLOAT,            // Type
+       GL_FALSE,            // Normalized
+       sizeof(GLfloat) * 6, // Stride
+       (void*) 0            // Array buffer offset
+   );
+   glVertexAttribPointer(
+       glGetAttribLocation(m_shader, "normal"),
+       3,           // Num coordinates per normal
+       GL_FLOAT,    // Type
+       GL_TRUE,     // Normalized
+       sizeof(GLfloat) * 6,           // Stride
+       (void*) (sizeof(GLfloat) * 3)    // Array buffer offset
+   );
+
+   // Unbind buffers.
+   glBindBuffer(GL_ARRAY_BUFFER, 0);
+   glBindVertexArray(0);
 //    ShapesScene::settingsChanged();
 
 }
@@ -61,7 +111,10 @@ void ShapesScene::renderGeometry()
     //       init() above.
 
     applyMaterial(m_material);
-    m_currShape->render(m_shader);
+    glBindVertexArray(m_vaoID);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+//    m_currShape->render(m_shader);
 
 }
 
