@@ -1,7 +1,7 @@
 #include "view.h"
 #include <QApplication>
 #include <QKeyEvent>
-#include "sphere.h"
+#include "shapes/sphere.h"
 #include "camera/CamtransCamera.h"
 
 View::View(QWidget *parent) : QGLWidget(parent)
@@ -71,10 +71,6 @@ void View::initializeGL()
     // the default).
     glFrontFace(GL_CCW);
     m_camera = new CamtransCamera();
-    m_defaultPerspectiveCamera->orientLook(
-                glm::vec4(2.f, 2.f, 2.f, 1.f),
-                glm::vec4(-1.f, -1.f, -1.f, 0.f),
-                glm::vec4(0.f, 1.f, 0.f, 0.f));
 }
 
 void View::paintGL()

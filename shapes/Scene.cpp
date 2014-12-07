@@ -13,7 +13,9 @@ Scene::Scene() //: m_camera(NULL)
 Scene::~Scene()
 {
     // Do not delete m_camera, it is owned by SupportCanvas3D
-    for (ShapeInfo* s : m_shapeInfo) {
+//    for (ShapeInfo* s : m_shapeInfo) {
+    for (int i = 0; i < m_shapeInfo.size(); i++) {
+        ShapeInfo* s = m_shapeInfo.at(i);
         delete s;
     }
 
@@ -46,22 +48,28 @@ void Scene::parse(Scene *sceneToFill, CS123ISceneParser *parser)
         CS123SceneNode* node = curr->node;
         glm::mat4x4 trans = curr->trans;
 
-        // update current transformation
-        for (CS123SceneTransformation* t : node->transformations) {
-            glm::mat4x4 mat = getMat(t);
-            trans = trans * mat;
-        }
+//        // update current transformation
+////        for (CS123SceneTransformation* t : node->transformations) {
+//        for (int i = 0; i < node->transformations.size(); i++) {
+//            CS123SceneTransformation* t = node->transformations.at(i);
+//            glm::mat4x4 mat = getMat(t);
+//            trans = trans * mat;
+//        }
 
-        // Add the primitives here to the scene
-        for (CS123ScenePrimitive* p : node->primitives) {
-            sceneToFill->addPrimitive(*p, trans);
-        }
+//        // Add the primitives here to the scene
+////        for (CS123ScenePrimitive* p : node->primitives) {
+//        for (int i = 0; i < node->primitives.size(); i++) {
+//            CS123ScenePrimitive* p = node->primitives.at(i);
+//            sceneToFill->addPrimitive(*p, trans);
+//        }
 
-        // add the children
-        for(CS123SceneNode* n : node->children)  {
-            toVisit.push_back(new NodeTransTuple(n, trans));
-            numToVisit++;
-        }
+//        // add the children
+////        for(CS123SceneNode* n : node->children)  {
+//        for (int i = 0; i < m_shapeInfo.size(); i++) {
+//            ShapeInfo* s = m_shapeInfo.at(i);
+//            toVisit.push_back(new NodeTransTuple(n, trans));
+//            numToVisit++;
+//        }
 
         numToVisit--;
         delete curr;
@@ -98,23 +106,23 @@ void Scene::parse2(Scene *sceneToFill1, Scene *sceneToFill2, CS123ISceneParser *
         CS123SceneNode* node = curr->node;
         glm::mat4x4 trans = curr->trans;
 
-        // update current transformation
-        for (CS123SceneTransformation* t : node->transformations) {
-            glm::mat4x4 mat = getMat(t);
-            trans = trans * mat;
-        }
+//        // update current transformation
+//        for (CS123SceneTransformation* t : node->transformations) {
+//            glm::mat4x4 mat = getMat(t);
+//            trans = trans * mat;
+//        }
 
-        // Add the primitives here to the scene
-        for (CS123ScenePrimitive* p : node->primitives) {
-            sceneToFill1->addPrimitive(*p, trans);
-            sceneToFill2->addPrimitive(*p, trans);
-        }
+//        // Add the primitives here to the scene
+//        for (CS123ScenePrimitive* p : node->primitives) {
+//            sceneToFill1->addPrimitive(*p, trans);
+//            sceneToFill2->addPrimitive(*p, trans);
+//        }
 
-        // add the children
-        for(CS123SceneNode* n : node->children)  {
-            toVisit.push_back(new NodeTransTuple(n, trans));
-            numToVisit++;
-        }
+//        // add the children
+//        for(CS123SceneNode* n : node->children)  {
+//            toVisit.push_back(new NodeTransTuple(n, trans));
+//            numToVisit++;
+//        }
 
         numToVisit--;
         delete curr;
