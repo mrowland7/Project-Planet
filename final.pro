@@ -189,5 +189,7 @@ unix:!macx {
 }
 macx {
 # Max's stuff here
-
+    LIBS += -L/Users/maxfuller/Documents/brown/junior/cs123/glew-1.11.0/lib -lGLEW
+    INCLUDEPATH+=/Users/maxfuller/Documents/brown/junior/cs123/glew-1.11.0/include
+    DEPENDPATH+=/Users/maxfuller/Documents/brown/junior/cs123/glew-1.11.0/include
 }
