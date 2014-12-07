@@ -17,8 +17,8 @@ OpenGLScene::~OpenGLScene()
 void OpenGLScene::init()
 {
     m_shader = ResourceLoader::loadShaders(
-            ":/shaders/default.vert",
-            ":/shaders/default.frag");
+            ":/shaders/shader.vert",
+            ":/shaders/shader.frag");
     m_normalRenderer = new NormalRenderer(m_shader);
 
     m_uniformLocs["p"]= glGetUniformLocation(m_shader, "p");
@@ -41,7 +41,7 @@ void OpenGLScene::render(Camera* camera)
     // Clear the screen in preparation for the next frame. (Use a gray background instead of a
     // black one for drawing wireframe or normals so they will show up against the background.)
     //if (settings.drawWireframe || settings.drawNormals) glClearColor(0.5f, 0.5f, 0.5f, 0.5f);
-    glClearColor(0.1, 0.1, 0.1, 0);
+    glClearColor(0.05, 0.1, 0.3, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Get the active camera

@@ -5,6 +5,7 @@
 #include <qgl.h>
 #include <QTime>
 #include <QTimer>
+#include "camera/CamtransCamera.h"
 
 class View : public QGLWidget
 {
@@ -31,7 +32,7 @@ private:
     void keyReleaseEvent(QKeyEvent *event);
 
     ShapesScene* m_scene;
-    Camera* m_camera;
+    CamtransCamera* m_camera;
 
 private slots:
     void tick();

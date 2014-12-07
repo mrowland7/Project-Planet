@@ -19,9 +19,6 @@ View::View(QWidget *parent) : QGLWidget(parent)
     connect(&timer, SIGNAL(timeout()), this, SLOT(tick()));
 
 
-    // Initialize terrain here
-    m_scene = new ShapesScene();
-    m_camera = new CamtransCamera();
 }
 
 View::~View()
@@ -45,6 +42,39 @@ void View::initializeGL()
     // events. This occurs if there are two monitors and the mouse is on the
     // secondary monitor.
     QCursor::setPos(mapToGlobal(QPoint(width() / 2, height() / 2)));
+
+
+    glewExperimental = GL_TRUE;
+    GLenum err = glewInit();
+    glGetError(); // Clear errors after call to glewInit
+    if (GLEW_OK != err)
+    {
+      // Problem: glewInit failed, something is seriously wrong.
+      fprintf(stderr, "Error initializing glew: %s\n", glewGetErrorString(err));
+    }
+
+    // Initialize terrain here
+    m_scene = new ShapesScene();
+    // Enable depth testing, so that objects are occluded based on depth instead of drawing order.
+    glEnable(GL_DEPTH_TEST);
+
+    // Move the polygons back a bit so lines are still drawn even though they are coplanar with the
+    // polygons they came from, which will be drawn before them.
+    glEnable(GL_POLYGON_OFFSET_LINE);
+    glPolygonOffset(-1, -1);
+
+    // Enable back-face culling, meaning only the front side of every face is rendered.
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+
+    // Specify that the front face is represented by vertices in counterclockwise order (this is
+    // the default).
+    glFrontFace(GL_CCW);
+    m_camera = new CamtransCamera();
+    m_defaultPerspectiveCamera->orientLook(
+                glm::vec4(2.f, 2.f, 2.f, 1.f),
+                glm::vec4(-1.f, -1.f, -1.f, 0.f),
+                glm::vec4(0.f, 1.f, 0.f, 0.f));
 }
 
 void View::paintGL()
