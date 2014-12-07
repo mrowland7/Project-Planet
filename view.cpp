@@ -15,6 +15,10 @@ View::View(QWidget *parent) : QGLWidget(parent)
 
     // The game loop is implemented using a timer
     connect(&timer, SIGNAL(timeout()), this, SLOT(tick()));
+
+
+    // Initialize terrain here
+
 }
 
 View::~View()
@@ -86,6 +90,11 @@ void View::keyPressEvent(QKeyEvent *event)
 
 void View::keyReleaseEvent(QKeyEvent *event)
 {
+}
+
+void View::wheelEvent(QWheelEvent *event) {
+
+
 }
 
 void View::tick()
