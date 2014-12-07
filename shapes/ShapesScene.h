@@ -2,7 +2,6 @@
 #define SHAPESSCENE_H
 
 #include "OpenGLScene.h"
-#include "Settings.h"
 #include "shape.h"
 
 /**
@@ -31,8 +30,6 @@ public:
     // Initialize the scene.
     virtual void init();
 
-    virtual void settingsChanged();
-
 protected:
     // Set the light uniforms for the lights in the scene. (The view matrix is used so that the
     // light can follows the camera.)
@@ -50,10 +47,6 @@ private:
 
     GLuint m_vaoID; // The vertex array object ID, which is passed to glBindVertexArray.
     Shape* m_currShape;
-    int m_prevP1;
-    int m_prevP2;
-    double m_prevP3;
-    int m_prevShape;
 
 };
 

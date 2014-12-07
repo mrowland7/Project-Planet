@@ -1,6 +1,8 @@
 #include "view.h"
 #include <QApplication>
 #include <QKeyEvent>
+#include "sphere.h"
+#include "camera/CamtransCamera.h"
 
 View::View(QWidget *parent) : QGLWidget(parent)
 {
@@ -18,7 +20,8 @@ View::View(QWidget *parent) : QGLWidget(parent)
 
 
     // Initialize terrain here
-
+    m_scene = new ShapesScene();
+    m_camera = new CamtransCamera();
 }
 
 View::~View()
@@ -49,6 +52,7 @@ void View::paintGL()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // TODO: Implement the demo rendering here
+    m_scene->render(m_camera);
 }
 
 void View::resizeGL(int w, int h)
@@ -103,6 +107,9 @@ void View::tick()
     float seconds = time.restart() * 0.001f;
 
     // TODO: Implement the demo update here
+
+    // TODO: check if there's a new section visible, if so, generate more terrain
+
 
     // Flag this view for repainting (Qt will call paintGL() soon after)
     update();

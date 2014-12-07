@@ -180,7 +180,7 @@ public:
     virtual void init();
 
     // Render the scene.
-    void render(SupportCanvas3D *context);
+    void render(Camera* camera);
 
     // Renders arrows for the normals that were initialized using initNormals(...).
     void renderNormals();

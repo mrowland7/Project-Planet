@@ -1,14 +1,7 @@
 #include "ShapesScene.h"
-#include "Camera.h"
-#include <SupportCanvas3D.h>
 #include <QFileDialog>
 #include "shape.h"
-#include "cube.h"
-#include "cylinder.h"
 #include "sphere.h"
-#include "cone.h"
-#include "torus.h"
-#include "mobius.h"
 
 
 glm::vec4 lightDirection = glm::normalize(glm::vec4(1.f, -1.f, -1.f, 0.f));
@@ -32,12 +25,9 @@ ShapesScene::ShapesScene()
     m_light.id = 0;
 
     //TODO: [SHAPES] Allocate any additional memory you need...
-    m_currShape = NULL;
-    m_prevShape = -1;
-    m_prevP1 = -1;
-    m_prevP2 = -1;
-    m_prevP3 = -1;
-
+    init();
+    m_currShape = new Sphere(100, 100);
+    m_currShape->initOpenglData(m_shader);
 }
 
 ShapesScene::~ShapesScene()
@@ -61,69 +51,7 @@ void ShapesScene::init()
 
     OpenGLScene::init(); // Call the superclass's init()
 
-    ShapesScene::settingsChanged();
-
-}
-
-void ShapesScene::settingsChanged()
-{
-    int p1 = settings.shapeParameter1;
-    int p2 = settings.shapeParameter2;
-    int p3 = settings.shapeParameter3;
-
-    if (p1 != m_prevP1 || p2 != m_prevP2 || settings.shapeType != m_prevShape
-            || (settings.shapeType == SHAPE_TORUS && p3 != m_prevP3)) {
-        delete m_currShape;
-        switch (settings.shapeType)
-        {
-        case SHAPE_CUBE:
-            m_currShape = new Cube(p1, p2);
-            break;
-        case SHAPE_CONE:
-            m_currShape = new Cone(p1, p2);
-            break;
-        case SHAPE_SPHERE:
-            m_currShape = new Sphere(p1, p2);
-            break;
-        case SHAPE_CYLINDER:
-            m_currShape = new Cylinder(p1, p2);
-            break;
-        case SHAPE_TORUS:
-            m_currShape = new Torus(p1, p2, p3);
-            break;
-        case SHAPE_SPECIAL_1:
-            m_currShape = new Mobius(p1, p2);
-            break;
-        default:
-            m_currShape = new Cube(p1, p2);
-            break;
-        }
-
-        /*
-        // Initialize the vertex array object.
-        glGenVertexArrays(1, &m_vaoID);
-        glBindVertexArray(m_vaoID);
-
-        // Initialize the vertex buffer object.
-        GLuint vertexBuffer;
-        glGenBuffers(1, &vertexBuffer);
-        glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-
-
-       // Unbind buffers.
-       glBindBuffer(GL_ARRAY_BUFFER, 0);
-       glBindVertexArray(0);
-       glDeleteBuffers(1, &vertexBuffer);
-       */
-        m_currShape->initOpenglData(m_shader);
-
-       m_currShape->renderNormals(m_normalRenderer);
-
-       m_prevP1 = p1;
-       m_prevP2 = p2;
-       m_prevP3 = p3;
-       m_prevShape = settings.shapeType;
-    }
+//    ShapesScene::settingsChanged();
 
 }
 

@@ -1,11 +1,9 @@
 #include "OpenGLScene.h"
-#include "Camera.h"
 #include "ResourceLoader.h"
-#include "Settings.h"
-#include "SupportCanvas3D.h"
 #include <string>
 #include <sstream>
 #include "QCoreApplication"
+#include "camera/Camera.h"
 OpenGLScene::OpenGLScene()
 {
     m_normalRenderer = NULL;
@@ -38,16 +36,15 @@ void OpenGLScene::init()
     m_uniformLocs["blend"] = glGetUniformLocation(m_shader, "blend");
 }
 
-void OpenGLScene::render(SupportCanvas3D *context)
+void OpenGLScene::render(Camera* camera)
 {
     // Clear the screen in preparation for the next frame. (Use a gray background instead of a
     // black one for drawing wireframe or normals so they will show up against the background.)
-    if (settings.drawWireframe || settings.drawNormals) glClearColor(0.5f, 0.5f, 0.5f, 0.5f);
-    else glClearColor(0, 0, 0, 0);
+    //if (settings.drawWireframe || settings.drawNormals) glClearColor(0.5f, 0.5f, 0.5f, 0.5f);
+    glClearColor(0.1, 0.1, 0.1, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Get the active camera
-    Camera *camera = context->getCamera();
     assert(camera);
     glm::mat4 viewMatrix = camera->getViewMatrix();
 
@@ -56,7 +53,7 @@ void OpenGLScene::render(SupportCanvas3D *context)
     // Set scene uniforms.
     clearLights();
     setLights(viewMatrix);
-    glUniform1i(m_uniformLocs["useLighting"], settings.useLighting);
+    glUniform1i(m_uniformLocs["useLighting"], true);
     glUniform1i(m_uniformLocs["useArrowOffsets"], GL_FALSE);
     glUniformMatrix4fv(m_uniformLocs["p"], 1, GL_FALSE,
             glm::value_ptr(camera->getProjectionMatrix()));
@@ -69,22 +66,22 @@ void OpenGLScene::render(SupportCanvas3D *context)
 
     renderGeometry();
 
-    if (settings.drawWireframe)
-    {
-        glUniform3f(m_uniformLocs["allBlack"], 0, 0, 0);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+//    if (settings.drawWireframe)
+//    {
+//        glUniform3f(m_uniformLocs["allBlack"], 0, 0, 0);
+//        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-        renderGeometry();
+//        renderGeometry();
 
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    }
-    // Render normals if specified.
-    if (settings.drawNormals)
-    {
-        glUseProgram(m_shader);
-        glUniform3f(m_uniformLocs["allBlack"], 0, 0, 0);
-        this->renderNormals();
-    }
+//        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+//    }
+//    // Render normals if specified.
+//    if (settings.drawNormals)
+//    {
+//        glUseProgram(m_shader);
+//        glUniform3f(m_uniformLocs["allBlack"], 0, 0, 0);
+//        this->renderNormals();
+//    }
 
     glUseProgram(0);
 }
@@ -132,7 +129,9 @@ void OpenGLScene::clearLights()
 
 std::vector<ShapeInfo*> OpenGLScene::getShapes() {
     std::vector<ShapeInfo*> newVec;//(m_shapeInfo.size());
-    for (ShapeInfo* s : m_shapeInfo) {
+//    for (ShapeInfo* s : m_shapeInfo) {
+    for (int i = 0; i < m_shapeInfo.size(); i++) {
+        ShapeInfo* s = m_shapeInfo.at(i);
         newVec.push_back(new ShapeInfo(
                              s->prim,
                              s->mat,
@@ -157,13 +156,13 @@ void OpenGLScene::setLight(const CS123SceneLightData &light)
         lightType = 0;
         glUniform3fv(glGetUniformLocation(m_shader, ("lightPositions" + indexString).c_str()), 1,
                 glm::value_ptr(light.pos));
-        if (!settings.usePointLights) ignoreLight = true;
+//        if (!settings.usePointLights) ignoreLight = true;
         break;
     case LIGHT_DIRECTIONAL:
         lightType = 1;
         glUniform3fv(glGetUniformLocation(m_shader, ("lightDirections" + indexString).c_str()), 1,
                 glm::value_ptr(glm::normalize(light.dir)));
-        if (!settings.useDirectionalLights) ignoreLight = true;
+//        if (!settings.useDirectionalLights) ignoreLight = true;
         break;
     default:
         ignoreLight = true; // Light type not supported

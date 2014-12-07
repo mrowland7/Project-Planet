@@ -1,6 +1,7 @@
 #ifndef VIEW_H
 #define VIEW_H
 
+#include "shapes/ShapesScene.h"
 #include <qgl.h>
 #include <QTime>
 #include <QTimer>
@@ -28,6 +29,9 @@ private:
 
     void keyPressEvent(QKeyEvent *event);
     void keyReleaseEvent(QKeyEvent *event);
+
+    ShapesScene* m_scene;
+    Camera* m_camera;
 
 private slots:
     void tick();

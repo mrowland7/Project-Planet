@@ -1,8 +1,8 @@
 #ifndef SCENE_H
 #define SCENE_H
 
-#include <CS123Common.h>
 #include "CS123SceneData.h"
+#include <CS123Common.h>
 #include "shape.h"
 
 class Camera;

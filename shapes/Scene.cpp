@@ -1,5 +1,5 @@
 #include "Scene.h"
-#include "Camera.h"
+#include "camera/Camera.h"
 #include "CS123SceneData.h"
 #include "CS123ISceneParser.h"
 #include <QtGlobal>

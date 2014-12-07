@@ -6,7 +6,7 @@
  */
 
 #include "CamtransCamera.h"
-#include <Settings.h>
+//#include <Settings.h>
 
 CamtransCamera::CamtransCamera()
 {
