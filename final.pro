@@ -14,7 +14,11 @@ SOURCES += main.cpp \
     glm/detail/dummy.cpp \
     glm/detail/glm.cpp \
     shapes/shape.cpp \
-    shapes/sphere.cpp
+    shapes/sphere.cpp \
+    camera/CamtransCamera.cpp \
+    shapes/OpenGLScene.cpp \
+    shapes/Scene.cpp \
+    shapes/ShapesScene.cpp
 
 HEADERS += mainwindow.h \
     view.h \
@@ -166,13 +170,24 @@ HEADERS += mainwindow.h \
     glm/vector_relational.hpp \
     shapes/shape.h \
     shapes/sphere.h \
-    ui_mainwindow.h
+    ui_mainwindow.h \
+    camera/Camera.h \
+    camera/CamtransCamera.h \
+    shapes/OpenGLScene.h \
+    shapes/Scene.h \
+    shapes/ShapesScene.h
 
 FORMS += mainwindow.ui
 
 #LIBS += -L/course/cs123/lib/glew/glew-1.10.0/include -lGLEW
 #INCLUDEPATH += /course/cs123/lib/glew/glew-1.10.0/include
 #DEPENDPATH += /course/cs123/lib/glew/glew-1.10.0/include
-LIBS += -L/home/mike/development/glew-1.11.0/lib -lGLEW
-INCLUDEPATH+=/home/mike/development/glew-1.11.0/include
-DEPENDPATH+=/home/mike/development/glew-1.11.0/include
+unix:!macx {
+    LIBS += -L/home/mike/development/glew-1.11.0/lib -lGLEW
+    INCLUDEPATH+=/home/mike/development/glew-1.11.0/include
+    DEPENDPATH+=/home/mike/development/glew-1.11.0/include
+}
+macx {
+# Max's stuff here
+
+}
