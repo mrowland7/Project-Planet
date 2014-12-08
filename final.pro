@@ -18,7 +18,8 @@ SOURCES += main.cpp \
     camera/CamtransCamera.cpp \
     shapes/OpenGLScene.cpp \
     shapes/Scene.cpp \
-    shapes/ShapesScene.cpp
+    shapes/ShapesScene.cpp \
+    terrain/chunk.cpp
 
 HEADERS += mainwindow.h \
     view.h \
@@ -175,7 +176,8 @@ HEADERS += mainwindow.h \
     camera/CamtransCamera.h \
     shapes/OpenGLScene.h \
     shapes/Scene.h \
-    shapes/ShapesScene.h
+    shapes/ShapesScene.h \
+    terrain/chunk.h
 
 FORMS += mainwindow.ui
 
