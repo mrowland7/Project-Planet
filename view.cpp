@@ -19,7 +19,9 @@ View::View(QWidget *parent) : QGLWidget(parent)
     // The game loop is implemented using a timer
     connect(&timer, SIGNAL(timeout()), this, SLOT(tick()));
 
-
+    m_sunCamera = new CamtransCamera();
+    m_sunCamera->translate(glm::vec4(3, 1, 3, 0));
+    m_camera = new CamtransCamera();
 }
 
 View::~View()
@@ -56,29 +58,24 @@ void View::initializeGL()
 
     initShaderInfo();
 
-    // Initialize terrain here
-//    m_scene = new ShapesScene();
-
     // Enable depth testing, so that objects are occluded based on depth instead of drawing order.
     glEnable(GL_DEPTH_TEST);
-
     // Move the polygons back a bit so lines are still drawn even though they are coplanar with the
     // polygons they came from, which will be drawn before them.
     glEnable(GL_POLYGON_OFFSET_LINE);
     glPolygonOffset(-1, -1);
-
     // Enable back-face culling, meaning only the front side of every face is rendered.
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-
     // Specify that the front face is represented by vertices in counterclockwise order (this is
     // the default).
     glFrontFace(GL_CCW);
 
+    // TODO: init chunks here instead of square
     initSquare();
-    // TODO: init chunks here
 
-    m_camera = new CamtransCamera();
+    initShadowmapBuffers();
+
 }
 
 void View::initShaderInfo() {
@@ -86,40 +83,76 @@ void View::initShaderInfo() {
             ":/shaders/shader.vert",
             ":/shaders/shader.frag");
 
+    m_shadowmapShader = ResourceLoader::loadShaders(
+            ":/shaders/shadowmap.vert",
+            ":/shaders/shadowmap.frag");
+
     m_uniformLocs["p"]= glGetUniformLocation(m_shader, "p");
     m_uniformLocs["m"]= glGetUniformLocation(m_shader, "m");
     m_uniformLocs["v"]= glGetUniformLocation(m_shader, "v");
-    m_uniformLocs["mvp"]= glGetUniformLocation(m_shader, "mvp");
+    m_uniformLocs["mvp"]= glGetUniformLocation(m_shader, "mvp"); // TODO don't need this?
     m_uniformLocs["useLighting"]= glGetUniformLocation(m_shader, "useLighting");
     m_uniformLocs["tex"] = glGetUniformLocation(m_shader, "tex");
 
 }
 
+void View::initShadowmapBuffers() {
+    glGenFramebuffers( 1, &m_shadowmapFBO );
+    glBindFramebuffer( GL_FRAMEBUFFER, m_shadowmapFBO);
+
+    glActiveTexture( GL_TEXTURE0 );
+    glGenTextures( 1, &m_shadowmapColorAttachment );
+    glBindTexture( GL_TEXTURE_2D, m_shadowmapColorAttachment);
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, width(), height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
+    glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_shadowmapColorAttachment, 0);
+
+    glBindFramebuffer( GL_FRAMEBUFFER, 0);
+}
+
 void View::paintGL()
 {
+    renderShadowmap();
+  //  renderFinal();
+}
+
+
+void View::renderShadowmap() {
+//    glBindFramebuffer(GL_FRAMEBUFFER, m_shadowmapFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    renderFromCamera(m_sunCamera, m_shadowmapShader);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void View::renderFinal() {
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    renderFromCamera(m_camera, m_shader);
+}
+
+void View::renderFromCamera(CamtransCamera* camera, GLuint shader) {
     glClearColor(0.05, 0.1, 0.2, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glUseProgram(m_shader);
 
+    glUseProgram(shader);
     glm::mat4 m4 = glm::mat4(1.0f);
-    glUniform3f(glGetUniformLocation(m_shader, "color"), 0.4, 0.5, 0);
-    glUniformMatrix4fv(glGetUniformLocation(m_shader, "mvp"), 1, GL_FALSE, &m4[0][0]);
+    glUniform3f(glGetUniformLocation(shader, "color"), 0.4, 0.5, 0);
+    glUniformMatrix4fv(glGetUniformLocation(shader, "mvp"), 1, GL_FALSE, &m4[0][0]);
 
-    glm::mat4 viewMatrix = m_camera->getViewMatrix();
+    glm::mat4 viewMatrix = camera->getViewMatrix();
     glUniform1i(m_uniformLocs["useLighting"], true);
     glUniformMatrix4fv(m_uniformLocs["p"], 1, GL_FALSE,
-            glm::value_ptr(m_camera->getProjectionMatrix()));
+            glm::value_ptr(camera->getProjectionMatrix()));
     glUniformMatrix4fv(m_uniformLocs["v"], 1, GL_FALSE,
             glm::value_ptr(viewMatrix));
     glUniformMatrix4fv(m_uniformLocs["m"], 1, GL_FALSE,
             glm::value_ptr(glm::mat4()));
-    glUniform3f(m_uniformLocs["allBlack"], 1, 1, 1);
-
 
     // TODO: instead of rendering square, do chunk rendering here
     glBindVertexArray(m_vaoID);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
+
 }
 
 void View::initSquare() {

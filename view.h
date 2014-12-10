@@ -23,7 +23,11 @@ private:
     void paintGL();
     void resizeGL(int w, int h);
 
+    void renderFromCamera(CamtransCamera* camera, GLuint shader);
+    void renderFinal();
+    void renderShadowmap();
     void initShaderInfo();
+    void initShadowmapBuffers();
 
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
@@ -37,7 +41,11 @@ private:
 
     ShapesScene* m_scene;
     CamtransCamera* m_camera;
+    CamtransCamera* m_sunCamera;
     GLuint m_shader;
+    GLuint m_shadowmapShader;
+    GLuint m_shadowmapFBO;
+    GLuint m_shadowmapColorAttachment;
     // TODO: shouldn't have own vao, just for the sanity square
     GLuint m_vaoID;
     std::map<string, GLint> m_uniformLocs;
