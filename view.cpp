@@ -20,7 +20,9 @@ View::View(QWidget *parent) : QGLWidget(parent)
     connect(&timer, SIGNAL(timeout()), this, SLOT(tick()));
 
     m_sunCamera = new CamtransCamera();
-    m_sunCamera->translate(glm::vec4(3, 1, 3, 0));
+    m_sunCamera->orientLook(glm::vec4(-2, 2, 2, 0),
+                            glm::vec4(2, -2, -2, 0),
+                            glm::vec4(0, 1, 0, 0));
     m_camera = new CamtransCamera();
 }
 
@@ -101,12 +103,14 @@ void View::initShadowmapBuffers() {
     glBindFramebuffer( GL_FRAMEBUFFER, m_shadowmapFBO);
 
     glActiveTexture( GL_TEXTURE0 );
-    glGenTextures( 1, &m_shadowmapColorAttachment );
-    glBindTexture( GL_TEXTURE_2D, m_shadowmapColorAttachment);
+    glGenTextures( 1, &m_shadowmapDepthAttachment );
+    glBindTexture( GL_TEXTURE_2D, m_shadowmapDepthAttachment);
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, width(), height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
-    glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_shadowmapColorAttachment, 0);
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0 );
+    glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_shadowmapDepthAttachment, 0);
+    // No color buffer
+    glDrawBuffer(0);
 
     glBindFramebuffer( GL_FRAMEBUFFER, 0);
 }
@@ -114,12 +118,12 @@ void View::initShadowmapBuffers() {
 void View::paintGL()
 {
     renderShadowmap();
-  //  renderFinal();
+    renderFinal();
 }
 
 
 void View::renderShadowmap() {
-//    glBindFramebuffer(GL_FRAMEBUFFER, m_shadowmapFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_shadowmapFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     renderFromCamera(m_sunCamera, m_shadowmapShader);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -127,24 +131,32 @@ void View::renderShadowmap() {
 
 void View::renderFinal() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glActiveTexture(GL_TEXTURE0);
+    glUniform1i(glGetUniformLocation(m_shader, "tex"), 0);
+    glBindTexture(GL_TEXTURE_2D, m_shadowmapDepthAttachment);
+
     renderFromCamera(m_camera, m_shader);
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void View::renderFromCamera(CamtransCamera* camera, GLuint shader) {
-    glClearColor(0.05, 0.1, 0.2, 0);
+    glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glUseProgram(shader);
     glm::mat4 m4 = glm::mat4(1.0f);
-    glUniform3f(glGetUniformLocation(shader, "color"), 0.4, 0.5, 0);
+//    glUniform3f(glGetUniformLocation(shader, "color"), 0.4, 0.5, 0);
     glUniformMatrix4fv(glGetUniformLocation(shader, "mvp"), 1, GL_FALSE, &m4[0][0]);
+    // TODO: bad bad bad bad bad
+    glm::mat4x4 shadowMvp = m_sunCamera->getProjectionMatrix() * m_sunCamera->getViewMatrix();
+    glUniformMatrix4fv(glGetUniformLocation(shader, "shadow_mvp"), 1, GL_FALSE, &shadowMvp[0][0]);
 
-    glm::mat4 viewMatrix = camera->getViewMatrix();
-    glUniform1i(m_uniformLocs["useLighting"], true);
+
     glUniformMatrix4fv(m_uniformLocs["p"], 1, GL_FALSE,
             glm::value_ptr(camera->getProjectionMatrix()));
     glUniformMatrix4fv(m_uniformLocs["v"], 1, GL_FALSE,
-            glm::value_ptr(viewMatrix));
+            glm::value_ptr(camera->getViewMatrix()));
     glUniformMatrix4fv(m_uniformLocs["m"], 1, GL_FALSE,
             glm::value_ptr(glm::mat4()));
 
@@ -152,7 +164,6 @@ void View::renderFromCamera(CamtransCamera* camera, GLuint shader) {
     glBindVertexArray(m_vaoID);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
-
 }
 
 void View::initSquare() {

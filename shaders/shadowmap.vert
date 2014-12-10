@@ -1,6 +1,6 @@
 #version 330 core
 
-out vec3 color; // Computed color for this vertex
+//out vec3 color; // Computed color for this vertex
 
 // Transformation matrices
 uniform mat4 p;
@@ -20,10 +20,12 @@ uniform mat4 mvp; // Modelview Projection matrix. This maps the vertices in mode
 
 void main(){
     vec4 position_cameraSpace = v * m * vec4(position, 1.0);
-    vec4 normal_cameraSpace = vec4(normalize(mat3(transpose(inverse(v * m))) * normal), 0);
+//    vec4 normal_cameraSpace = vec4(normalize(mat3(transpose(inverse(v * m))) * normal), 0);
 
-    vec4 position_worldSpace = m * vec4(position, 1.0);
-    vec4 normal_worldSpace = vec4(normalize(mat3(transpose(inverse(m))) * normal), 0);
+//    vec4 position_worldSpace = m * vec4(position, 1.0);
+//    vec4 normal_worldSpace = vec4(normalize(mat3(transpose(inverse(m))) * normal), 0);
+
+
     gl_Position = p * position_cameraSpace;
-    color = vec3(0, 1.0, 0);//clamp(color, 0.0, 1.0) * allBlack;
+//    gl_Position = mvp * vec4(position, 1.0);
 }

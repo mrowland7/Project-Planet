@@ -1,8 +1,8 @@
 #version 330 core
 
-in vec3 color;
 out vec4 fragColor;
 
 void main(){
-    fragColor = vec4(0, 1, 0, 1);
+    float depth = gl_FragCoord.z;
+    fragColor = vec4(depth, depth, depth, depth);
 }
