@@ -19,11 +19,14 @@ View::View(QWidget *parent) : QGLWidget(parent)
     // The game loop is implemented using a timer
     connect(&timer, SIGNAL(timeout()), this, SLOT(tick()));
 
+    m_tree = 0;
+
 
 }
 
 View::~View()
 {
+    delete m_tree;
 }
 
 void View::initializeGL()
@@ -77,6 +80,7 @@ void View::initializeGL()
 
     initSquare();
     // TODO: init chunks here
+    m_tree = new TerrainTree(m_shader);
 
     m_camera = new CamtransCamera();
 }
@@ -97,6 +101,8 @@ void View::initShaderInfo() {
 
 void View::paintGL()
 {
+
+
     glClearColor(0.05, 0.1, 0.2, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(m_shader);
@@ -118,8 +124,10 @@ void View::paintGL()
 
     // TODO: instead of rendering square, do chunk rendering here
     glBindVertexArray(m_vaoID);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    //glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
+
+    m_tree->draw(glm::vec3(), 0, 0);
 }
 
 void View::initSquare() {

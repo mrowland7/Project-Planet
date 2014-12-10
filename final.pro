@@ -19,7 +19,8 @@ SOURCES += main.cpp \
     shapes/OpenGLScene.cpp \
     shapes/Scene.cpp \
     shapes/ShapesScene.cpp \
-    terrain/chunk.cpp
+    terrain/chunk.cpp \
+    terrain/TerrainTree.cpp
 
 HEADERS += mainwindow.h \
     view.h \
@@ -177,7 +178,8 @@ HEADERS += mainwindow.h \
     shapes/OpenGLScene.h \
     shapes/Scene.h \
     shapes/ShapesScene.h \
-    terrain/chunk.h
+    terrain/chunk.h \
+    terrain/TerrainTree.h
 
 FORMS += mainwindow.ui
 

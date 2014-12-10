@@ -6,6 +6,7 @@
 #include <QTime>
 #include <QTimer>
 #include "camera/CamtransCamera.h"
+#include "terrain/TerrainTree.h"
 
 class View : public QGLWidget
 {
@@ -41,6 +42,8 @@ private:
     // TODO: shouldn't have own vao, just for the sanity square
     GLuint m_vaoID;
     std::map<string, GLint> m_uniformLocs;
+
+    TerrainTree *m_tree;
 
 private slots:
     void tick();
