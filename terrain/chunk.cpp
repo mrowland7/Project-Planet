@@ -52,9 +52,6 @@ void Chunk::drawRecursive(glm::vec3 cameraPos, float thetaWidth, float thetaHeig
 }
 
 void Chunk::update(glm::vec3 cameraPos, float thetaWidth, float thetaHeight, int level) {
-
-
-
     if(this->m_level +1 <= level) {
         glm::vec2 childSize = glm::vec2(1.f/(2*m_numChunksX), 1.f/(2*m_numChunksX));
         for(int i = 0; i < 4; i++) {

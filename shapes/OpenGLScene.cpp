@@ -54,7 +54,6 @@ void OpenGLScene::render(Camera* camera)
     clearLights();
     setLights(viewMatrix);
     glUniform1i(m_uniformLocs["useLighting"], true);
-    glUniform1i(m_uniformLocs["useArrowOffsets"], GL_FALSE);
     glUniformMatrix4fv(m_uniformLocs["p"], 1, GL_FALSE,
             glm::value_ptr(camera->getProjectionMatrix()));
     glUniformMatrix4fv(m_uniformLocs["v"], 1, GL_FALSE,

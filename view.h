@@ -23,6 +23,8 @@ private:
     void paintGL();
     void resizeGL(int w, int h);
 
+    void initShaderInfo();
+
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
@@ -36,7 +38,9 @@ private:
     ShapesScene* m_scene;
     CamtransCamera* m_camera;
     GLuint m_shader;
+    // TODO: shouldn't have own vao, just for the sanity square
     GLuint m_vaoID;
+    std::map<string, GLint> m_uniformLocs;
 
 private slots:
     void tick();

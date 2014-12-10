@@ -19,6 +19,12 @@ uniform mat4 mvp; // Modelview Projection matrix. This maps the vertices in mode
 //uniform vec3 lightColors[MAX_LIGHTS];
 
 void main(){
-    gl_Position = mvp * vec4(position.xyz, 1.0);
+//    gl_Position = mvp * vec4(position.xyz, 1.0);
+    vec4 position_cameraSpace = v * m * vec4(position, 1.0);
+    vec4 normal_cameraSpace = vec4(normalize(mat3(transpose(inverse(v * m))) * normal), 0);
+
+    vec4 position_worldSpace = m * vec4(position, 1.0);
+    vec4 normal_worldSpace = vec4(normalize(mat3(transpose(inverse(m))) * normal), 0);
+    gl_Position = p * position_cameraSpace;
     color = vec3(0, 1.0, 0);//clamp(color, 0.0, 1.0) * allBlack;
 }

@@ -54,11 +54,11 @@ void View::initializeGL()
       fprintf(stderr, "Error initializing glew: %s\n", glewGetErrorString(err));
     }
 
-    m_shader = ResourceLoader::loadShaders(
-            ":/shaders/shader.vert",
-            ":/shaders/shader.frag");
+    initShaderInfo();
+
     // Initialize terrain here
 //    m_scene = new ShapesScene();
+
     // Enable depth testing, so that objects are occluded based on depth instead of drawing order.
     glEnable(GL_DEPTH_TEST);
 
@@ -74,8 +74,25 @@ void View::initializeGL()
     // Specify that the front face is represented by vertices in counterclockwise order (this is
     // the default).
     glFrontFace(GL_CCW);
+
     initSquare();
-//    m_camera = new CamtransCamera();
+    // TODO: init chunks here
+
+    m_camera = new CamtransCamera();
+}
+
+void View::initShaderInfo() {
+    m_shader = ResourceLoader::loadShaders(
+            ":/shaders/shader.vert",
+            ":/shaders/shader.frag");
+
+    m_uniformLocs["p"]= glGetUniformLocation(m_shader, "p");
+    m_uniformLocs["m"]= glGetUniformLocation(m_shader, "m");
+    m_uniformLocs["v"]= glGetUniformLocation(m_shader, "v");
+    m_uniformLocs["mvp"]= glGetUniformLocation(m_shader, "mvp");
+    m_uniformLocs["useLighting"]= glGetUniformLocation(m_shader, "useLighting");
+    m_uniformLocs["tex"] = glGetUniformLocation(m_shader, "tex");
+
 }
 
 void View::paintGL()
@@ -85,10 +102,21 @@ void View::paintGL()
     glUseProgram(m_shader);
 
     glm::mat4 m4 = glm::mat4(1.0f);
-    glUniform3f(glGetUniformLocation(m_shader, "color"), 1, 0, 0);
+    glUniform3f(glGetUniformLocation(m_shader, "color"), 0.4, 0.5, 0);
     glUniformMatrix4fv(glGetUniformLocation(m_shader, "mvp"), 1, GL_FALSE, &m4[0][0]);
-    // TODO: Implement the demo rendering here
-//    m_scene->render(m_camera);
+
+    glm::mat4 viewMatrix = m_camera->getViewMatrix();
+    glUniform1i(m_uniformLocs["useLighting"], true);
+    glUniformMatrix4fv(m_uniformLocs["p"], 1, GL_FALSE,
+            glm::value_ptr(m_camera->getProjectionMatrix()));
+    glUniformMatrix4fv(m_uniformLocs["v"], 1, GL_FALSE,
+            glm::value_ptr(viewMatrix));
+    glUniformMatrix4fv(m_uniformLocs["m"], 1, GL_FALSE,
+            glm::value_ptr(glm::mat4()));
+    glUniform3f(m_uniformLocs["allBlack"], 1, 1, 1);
+
+
+    // TODO: instead of rendering square, do chunk rendering here
     glBindVertexArray(m_vaoID);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
