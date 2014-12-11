@@ -40,7 +40,7 @@ void main(){
         }
 //        fragColor = vec4(depthVal, depthVal, depthVal, 1);
 //        fragColor = vec4(pos_shadowSpace.xyz, 1);
-        fragColor = vec4(shadowVal, shadowVal, shadowVal, 1);
+//        fragColor = vec4(shadowVal, shadowVal, shadowVal, 1);
 //        fragColor = vec4(altShadowVal, altShadowVal, altShadowVal, 1);
     }
 }

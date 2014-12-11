@@ -28,9 +28,9 @@ View::View(QWidget *parent) : QGLWidget(parent)
     m_camera->orientLook(glm::vec4(0, 1, 2, 0),
                             glm::vec4(0, -1, -2, 0),
                             glm::vec4(0, 1, 0, 0));
-//    m_camera->orientLook(glm::vec4(2, 2, 4, 0),
-//                            glm::vec4(-2, -2, -4, 0),
-//                            glm::vec4(0, 1, 0, 0));
+    m_camera->orientLook(glm::vec4(2, 2, 4, 0),
+                            glm::vec4(-2, -2, -4, 0),
+                            glm::vec4(0, 1, 0, 0));
 }
 
 View::~View()
@@ -109,6 +109,10 @@ void View::initShadowmapBuffers() {
     glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, width(), height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
     glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_shadowmapColorAttachment, 0);
 
+    glGenRenderbuffers( 1, &m_shadowmapDepthAttachment );
+    glBindRenderbuffer( GL_RENDERBUFFER, m_shadowmapDepthAttachment );
+    glRenderbufferStorage( GL_RENDERBUFFER, GL_DEPTH_COMPONENT32, width(), height() );
+    glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_shadowmapDepthAttachment );
 //    glActiveTexture( GL_TEXTURE0 );
 //    glGenTextures( 1, &m_shadowmapDepthAttachment );
 //    glBindTexture( GL_TEXTURE_2D, m_shadowmapDepthAttachment);

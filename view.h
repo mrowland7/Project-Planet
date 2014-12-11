@@ -46,6 +46,7 @@ private:
     GLuint m_shadowmapShader;
     GLuint m_shadowmapFBO;
     GLuint m_shadowmapColorAttachment;
+    GLuint m_shadowmapDepthAttachment;
     // TODO: shouldn't have own vao, just for the sanity square
     GLuint m_vaoID;
 
