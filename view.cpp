@@ -23,14 +23,17 @@ View::View(QWidget *parent) : QGLWidget(parent)
 
 
     m_sunCamera = new CamtransCamera();
-    m_sunCamera->orientLook(glm::vec4(-2, 2, 2, 0),
-                            glm::vec4(2, -2, -2, 0),
+    m_sunCamera->orientLook(glm::vec4(0, 1, 4, 0),
+                            glm::vec4(0, -1, -4, 0),
                             glm::vec4(0, 1, 0, 0));
     m_camera = new CamtransCamera();
     m_camera->orientLook(glm::vec4(0, 0, 2, 0),
                             glm::vec4(0, 0, -2, 0),
                             glm::vec4(0, 1, 0, 0));
     m_camera->setClip(.00001,10);
+//    m_camera->orientLook(glm::vec4(0, 0, 2, 0),
+//                            glm::vec4(0, 0, -1, 0),
+//                            glm::vec4(0, 1, 0, 0));
 }
 
 View::~View()
@@ -113,6 +116,7 @@ void View::initShaderInfo() {
     m_uniformLocs["lightPosition"] = glGetUniformLocation(m_shader, "lightPosition");
     m_uniformLocs["lightColor"] = glGetUniformLocation(m_shader, "lightColor");
 
+
 }
 
 void View::initShadowmapBuffers() {
@@ -120,14 +124,22 @@ void View::initShadowmapBuffers() {
     glBindFramebuffer( GL_FRAMEBUFFER, m_shadowmapFBO);
 
     glActiveTexture( GL_TEXTURE0 );
-    glGenTextures( 1, &m_shadowmapDepthAttachment );
-    glBindTexture( GL_TEXTURE_2D, m_shadowmapDepthAttachment);
+    glGenTextures( 1, &m_shadowmapColorAttachment);
+    glBindTexture( GL_TEXTURE_2D, m_shadowmapColorAttachment );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-    glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0 );
-    glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_shadowmapDepthAttachment, 0);
-    // No color buffer
-    glDrawBuffer(0);
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, width(), height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
+    glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_shadowmapColorAttachment, 0);
+
+//    glActiveTexture( GL_TEXTURE0 );
+//    glGenTextures( 1, &m_shadowmapDepthAttachment );
+//    glBindTexture( GL_TEXTURE_2D, m_shadowmapDepthAttachment);
+//    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+//    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+//    glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0 );
+//    glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_shadowmapDepthAttachment, 0);
+//    // No color buffer
+//    glDrawBuffer(0);
 
     glBindFramebuffer( GL_FRAMEBUFFER, 0);
 }
@@ -144,7 +156,6 @@ void View::paintGL()
 
 void View::renderShadowmap() {
     glBindFramebuffer(GL_FRAMEBUFFER, m_shadowmapFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     renderFromCamera(m_sunCamera, m_shadowmapShader);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -152,9 +163,14 @@ void View::renderShadowmap() {
 void View::renderFinal() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+    // TODO: how to actually pass this?
+
+
     glActiveTexture(GL_TEXTURE0);
     glUniform1i(glGetUniformLocation(m_shader, "tex"), 0);
-    glBindTexture(GL_TEXTURE_2D, m_shadowmapDepthAttachment);
+    glBindTexture(GL_TEXTURE_2D, m_shadowmapColorAttachment);
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 
     renderFromCamera(m_camera, m_shader);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -166,25 +182,18 @@ void View::renderFromCamera(CamtransCamera* camera, GLuint shader) {
 
     glUseProgram(shader);
     glm::mat4 m4 = glm::mat4(1.0f);
-//    glUniform3f(glGetUniformLocation(shader, "color"), 0.4, 0.5, 0);
-    glUniformMatrix4fv(glGetUniformLocation(shader, "mvp"), 1, GL_FALSE, &m4[0][0]);
     // TODO: bad bad bad bad bad
-    glm::mat4x4 shadowMvp = m_sunCamera->getProjectionMatrix() * m_sunCamera->getViewMatrix();
-    glUniformMatrix4fv(glGetUniformLocation(shader, "shadow_mvp"), 1, GL_FALSE, &shadowMvp[0][0]);
+    glm::mat4x4 shadowV = m_sunCamera->getProjectionMatrix() * m_sunCamera->getViewMatrix();
+    glUniformMatrix4fv(glGetUniformLocation(shader, "shadow_v"), 1, GL_FALSE, &shadowV[0][0]);
 
 
-    glUniformMatrix4fv(m_uniformLocs["p"], 1, GL_FALSE,
+    glUniformMatrix4fv(glGetUniformLocation(shader, "p"), 1, GL_FALSE,
             glm::value_ptr(camera->getProjectionMatrix()));
-    glUniformMatrix4fv(m_uniformLocs["v"], 1, GL_FALSE,
+    glUniformMatrix4fv(glGetUniformLocation(shader, "v"), 1, GL_FALSE,
             glm::value_ptr(camera->getViewMatrix()));
     glUniformMatrix4fv(m_uniformLocs["m"], 1, GL_FALSE,
             glm::value_ptr(m_tree->getModel()));
 
-
-    // TODO: instead of rendering square, do chunk rendering here
-    glBindVertexArray(m_vaoID);
-    //glDrawArrays(GL_TRIANGLES, 0, 6);
-    glBindVertexArray(0);
 
     //setLights
     LightData ld = {0, glm::vec3(1,1,0),glm::vec3(m_camera->getPosition())};
@@ -194,43 +203,49 @@ void View::renderFromCamera(CamtransCamera* camera, GLuint shader) {
 }
 
 void View::initSquare() {
-    // Step 1: Create GLfloat array of vertices that will draw a square. This should involve 6 vertices
-    // Here is an example that contains the vertices of an isosceles triangle
-    GLuint vertexLocation = glGetAttribLocation(m_shader, "position");
+    GLuint vertexLocation1 = glGetAttribLocation(m_shader, "position");
+    GLuint vertexLocation2 = glGetAttribLocation(m_shadowmapShader, "position");
 
     GLfloat vertexBufferData[] = {
+//        // Square 1
         0.5f, -0.5f, 0.0f,
         0.5f, 0.5f, 0.0f,
        -0.5f, 0.5f, 0.0f,
        -0.5f, -0.5f, 0.0f,
         0.5f, -0.5f, 0.0f,
        -0.5f, 0.5f, 0.0f,
+        // Square 2
+        0.8f, -0.2f, -2.0f,
+        0.8f, 0.8f, -2.0f,
+       -0.2f, 0.8f, -2.0f,
+       -0.2f, -0.2f, -2.0f,
+        0.8f, -0.2f, -2.0f,
+       -0.2f, 0.8f, -2.0f
     };
 
-    // Step 2: initialize and bind a Vertex Array Object -- see glGenVertexArrays and glBindVertexArray
     glGenVertexArrays(1, &m_vaoID);
     glBindVertexArray(m_vaoID);
 
-
-    // Step 3: initialize and bind a buffer for your vertex data -- see glGenBuffers and glBindBuffer
     GLuint buffer;
     glGenBuffers(1, &buffer);
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    // Step 4: Send your vertex data to the GPU -- see glBufferData
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertexBufferData), vertexBufferData, GL_STATIC_DRAW);
 
-    // Step 5: Expose the vertices to other OpenGL components (namely, shaders)
-    //         -- see glEnableVertexAttribArray and glVertexAttribPointer
-    glEnableVertexAttribArray(vertexLocation);
-    glVertexAttribPointer(vertexLocation,
+    glEnableVertexAttribArray(vertexLocation1);
+    glVertexAttribPointer(vertexLocation1,
+                          3,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          0,
+                          (void*) 0);
+    glEnableVertexAttribArray(vertexLocation2);
+    glVertexAttribPointer(vertexLocation2,
                           3,
                           GL_FLOAT,
                           GL_FALSE,
                           0,
                           (void*) 0);
 
-    // Step 6: Clean up -- unbind the buffer and vertex array.
-    //         It is a good habit to leave the state of OpenGL the way you found it
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
@@ -251,35 +266,6 @@ void View::mouseMoveEvent(QMouseEvent *event)
 {
     if(m_leftMouseDown) {
         glm::vec2 currMouseCoordinates = glm::vec2((float)event->x(), (float)event->y());
-    /*
-        glm::vec2 diff = currMouseCoordinates - m_prevMouseCoordinates;
-
-        m_camera->rotateV(diff.x*360.f*m_camera->getHeightAngle()/360.f);
-        m_camera->rotateU(diff.y*360.f*m_camera->getHeightAngle()/360.f);
-
-
-        m_prevMouseCoordinates = currMouseCoordinates;*/
-
-        /*float dx = event->x() - m_prevMouseCoordinates.x,
-              dy = event->y() - m_prevMouseCoordinates.y;
-
-        glm::vec4 eye = m_camera->getPosition();
-
-        double x = eye.x, y = eye.y, z = eye.z,
-               r = sqrt(eye.x * eye.x +
-                        eye.y * eye.y +
-                        eye.z * eye.z),
-               theta = acos(y / r) - dy * 0.001f,
-               phi = atan2(y, x) + dx * 0.001f;
-
-        if (theta > M_PI-.1) theta = M_PI - .1;
-        if (theta < .1) theta = .1;
-
-        eye.x = r * sin(theta) * cos(phi);
-        eye.y = r * cos(theta);
-        eye.z = r * sin(theta) * sin(phi);
-        m_camera->orientLook(eye, -glm::normalize(eye), glm::vec4(0,1,0,0));*/
-
         glm::vec4 hit1;
         glm::vec4 hit2;
         glm::vec4 currRay = glm::vec4(getRayFromScreenCoord(currMouseCoordinates),0);
@@ -299,15 +285,9 @@ void View::mouseMoveEvent(QMouseEvent *event)
             glm::mat4 mat3 = glm::translate(glm::mat4(), glm::vec3(center));
             m_tree->setModel(mat3*mat2*mat1*m_tree->getModel());
 
-            glm::vec3 test = a-b;
-            std::cout << "test: " << test.x << "," << test.y << "," << test.z << std::endl;
-            std::cout << "axis: " << axis.x << "," << axis.y << "," << axis.z << std::endl;
-            std::cout << "center: " << center.x << "," << center.y << "," << center.z << std::endl;
-            std::cout << "currRay: " << currRay.x << "," << currRay.y << "," << currRay.z << std::endl;
 
         }
 
-        glm::vec4 vec = glm::vec4(0,2,0,0);
 
     m_prevMouseCoordinates = currMouseCoordinates;
     }

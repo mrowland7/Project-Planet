@@ -62,7 +62,7 @@ private:
     GLuint m_shader;
     GLuint m_shadowmapShader;
     GLuint m_shadowmapFBO;
-    GLuint m_shadowmapDepthAttachment;
+    GLuint m_shadowmapColorAttachment;
     // TODO: shouldn't have own vao, just for the sanity square
     GLuint m_vaoID;
     std::map<string, GLint> m_uniformLocs;
