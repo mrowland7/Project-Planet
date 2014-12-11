@@ -1,6 +1,10 @@
 #include "chunk.h"
 
-Chunk::Chunk(int level, glm::vec2 planePos, int numChunksX)
+const int Chunk::VERTEX_GRID_HEIGHT = 512;
+const int Chunk::VERTEX_GRID_WIDTH = 512;
+
+
+Chunk::Chunk(int level, glm::vec2 planePos, int numChunksX, GLint shader, GLint shadowShader)
 {
     m_level = level;
     m_planePos = planePos;
@@ -11,6 +15,10 @@ Chunk::Chunk(int level, glm::vec2 planePos, int numChunksX)
     m_children[3] = 0;
     m_heightData = 0;
     m_biomeData = 0;
+    m_shader = shader;
+    m_shadowShader = m_shadowShader;
+
+
 
 
 }
@@ -25,26 +33,40 @@ Chunk::~Chunk() {
 }
 
 
-void Chunk::draw() {
+void Chunk::draw(GLint shader) {
+    glUseProgram(shader);
+
     glBindVertexArray(m_vaoID);
-    for (int row = 0; row < VERTEX_HEIGHT; row++){
-        glDrawArrays(GL_TRIANGLE_STRIP, (VERTEX_WIDTH+1)*2*row, (VERTEX_WIDTH+1)*2);
+    for (int row = 0; row < VERTEX_GRID_HEIGHT; row++){
+        glDrawArrays(GL_TRIANGLE_STRIP, (VERTEX_GRID_WIDTH+1)*2*row, (VERTEX_GRID_WIDTH+1)*2);
     }
 
+    /*glm::vec3 normals[(VERTEX_GRID_WIDTH+1)*(VERTEX_GRID_HEIGHT+1)];
+    glm::vec3 vertices[(VERTEX_GRID_WIDTH+1)*(VERTEX_GRID_HEIGHT+1)];
+
+    populateVertices(vertices);
+    populateNormals(vertices, normals);
+
+    drawNormals(vertices, normals);
+*/
     glBindVertexArray(0);
+
+    glUseProgram(0);
+
+
 }
 
-void Chunk::drawRecursive(glm::vec3 cameraPos, float thetaWidth, float thetaHeight, int level) {\
+void Chunk::drawRecursive(glm::vec3 cameraPos, float thetaWidth, float thetaHeight, int level, GLint shader) {\
 
     if(this->m_level <= level && isVisible(cameraPos, thetaWidth, thetaHeight)) {
         bool allChildrenExist = m_children[0] != 0 && m_children[1] != 0
                 && m_children[2] != 0 && m_children[3] != 0;
         if(allChildrenExist) {
             for(int i = 0; i < 4; i++) {
-                m_children[i]->drawRecursive(cameraPos, thetaWidth, thetaHeight, level);
+                m_children[i]->drawRecursive(cameraPos, thetaWidth, thetaHeight, level, shader);
             }
         } else {
-            draw();
+            draw(shader);
         }
     }
 
@@ -52,7 +74,7 @@ void Chunk::drawRecursive(glm::vec3 cameraPos, float thetaWidth, float thetaHeig
 }
 
 void Chunk::update(glm::vec3 cameraPos, float thetaWidth, float thetaHeight, int level) {
-    if(this->m_level +1 <= level) {
+    if(m_level +1 <= level) {
         glm::vec2 childSize = glm::vec2(1.f/(2*m_numChunksX), 1.f/(2*m_numChunksX));
         for(int i = 0; i < 4; i++) {
             if(m_children[i] == 0) {
@@ -60,7 +82,7 @@ void Chunk::update(glm::vec3 cameraPos, float thetaWidth, float thetaHeight, int
                 int quadY = i/2;
                 glm::vec2 quadOffset = glm::vec2(quadX, quadY);
                 glm::vec2 childPlanePos = quadOffset*childSize + m_planePos;
-                m_children[i] = new Chunk(m_level + 1,  childPlanePos, 2*m_numChunksX);
+                m_children[i] = new Chunk(m_level + 1,  childPlanePos, 2*m_numChunksX, m_shader, m_shadowShader);
                 m_children[i]->generate(m_heightData, m_biomeData, i);
                 m_children[i]->update(cameraPos, thetaWidth, thetaHeight, level);
             }
@@ -70,35 +92,68 @@ void Chunk::update(glm::vec3 cameraPos, float thetaWidth, float thetaHeight, int
 
 
 void Chunk::generate(float *parentHeightData, float *parentBiomeData, int quadrant) {
-    this->m_heightData = new float[(VERTEX_WIDTH+1)*(VERTEX_HEIGHT+1)];
-    //this->m_normalData = new float[(VERTEX_WIDTH+1)*(VERTEX_HEIGHT+1)];
+    assert(m_heightData == 0);
+    assert(m_biomeData == 0);
+    this->m_heightData = new float[(VERTEX_GRID_WIDTH+1)*(VERTEX_GRID_HEIGHT+1)];
+    this->m_biomeData = new float[(VERTEX_GRID_WIDTH+1)*(VERTEX_GRID_HEIGHT+1)];
+
+    for(int i = 0; i < VERTEX_GRID_WIDTH*(VERTEX_GRID_WIDTH+1); i++) {
+        m_heightData[i] = 0;
+    }
+
 
     int quadX = quadrant%2;
     int quadY = quadrant/2;
-    int xOffset = quadX*VERTEX_WIDTH/2;
-    int yOffset = quadY*VERTEX_HEIGHT/2;
+    int xOffset = quadX*VERTEX_GRID_WIDTH/2;
+    int yOffset = quadY*VERTEX_GRID_HEIGHT/2;
 
-    for(int row = 0; row < VERTEX_HEIGHT/2 + 1; row++) {
-        for(int col = 0; col < VERTEX_WIDTH/2 + 1; col++) {
-            m_heightData[(row*2)*VERTEX_WIDTH + (col*2)] =
-                    parentHeightData[(row+yOffset)*VERTEX_WIDTH + col+xOffset];
+    for(int row = 0; row < VERTEX_GRID_HEIGHT/2 + 1; row++) {
+        for(int col = 0; col < VERTEX_GRID_WIDTH/2 + 1; col++) {
+            m_heightData[(row*2)*(VERTEX_GRID_WIDTH+1) + (col*2)] =
+                    parentHeightData[(row+yOffset)*(VERTEX_GRID_WIDTH+1) + col+xOffset];
         }
     }
 
 
-    for(int row = 0; row < VERTEX_HEIGHT/2; row++) {
-        for(int col = 0; col < VERTEX_WIDTH/2; col++) {
+    for(int row = 0; row < VERTEX_GRID_HEIGHT/2; row++) {
+        for(int col = 0; col < VERTEX_GRID_WIDTH/2; col++) {
             glm::vec2 topLeft = glm::vec2(2*col, 2*row);
             glm::vec2 bottomRight = glm::vec2(2*(col+1), 2*(row+1));
-            subdivideSquare(topLeft, bottomRight);
+            subdivideSquare(topLeft, bottomRight, 1);
         }
     }
 
     initGL();
 }
 
-void Chunk::subdivideSquare(glm::vec2 topleft, glm::vec2 botright)
+void Chunk::generateRoot() {
+
+    m_heightData = new float[(VERTEX_GRID_WIDTH+1)*(VERTEX_GRID_HEIGHT+1)];
+    m_biomeData = new float[(VERTEX_GRID_WIDTH+1)*(VERTEX_GRID_HEIGHT+1)];
+
+    for(int i = 0; i < (VERTEX_GRID_WIDTH+1)*(VERTEX_GRID_HEIGHT+1); i++) {
+        m_heightData[i] = 0;
+        m_biomeData[i] = 0;
+    }
+
+        //check to make sure we don't get floating point errors. I don't trust floats!
+        float val = (float)((int)(log(VERTEX_GRID_HEIGHT)/log(2)))- log(VERTEX_GRID_HEIGHT)/log(2);
+        assert(val < .00000001f);
+
+        int depth = (int)(log(VERTEX_GRID_HEIGHT)/log(2));
+        subdivideSquare(glm::vec2(0,0), glm::vec2(VERTEX_GRID_WIDTH, VERTEX_GRID_HEIGHT),depth);
+
+
+    initGL();
+
+}
+
+
+
+void Chunk::subdivideSquare(glm::vec2 topleft, glm::vec2 botright, int depth)
 {
+    if(depth <= 0) return;
+
     // TL--TM--TR    +---> x
     // |   |   |     |
     // ML--MM--MR    V
@@ -124,16 +179,26 @@ void Chunk::subdivideSquare(glm::vec2 topleft, glm::vec2 botright)
 
 
     glm::vec2 TM = (TL + TR)*.5f;
-    glm::vec2 RM = (TR + BR)*.5f;
+    glm::vec2 MR = (TR + BR)*.5f;
     glm::vec2 BM = (BL + BR)*.5f;
-    glm::vec2 LM = (TL + BL)*.5f;
+    glm::vec2 ML = (TL + BL)*.5f;
     glm::vec2 MM = (TL + TR + BL + BR)*.25f;
 
+    float currGridWidth =  VERTEX_GRID_WIDTH/(botright.x - topleft.x);
+    int globalDepth = 1+log(currGridWidth*m_numChunksX)/log(2);
+    float perturb = getPerturb(globalDepth);
+
     m_heightData[getIndex(TM)] = (hTL + hTR)*.5f;
-    m_heightData[getIndex(RM)] = (hTR + hBR)*.5f;
+    m_heightData[getIndex(MR)] = (hTR + hBR)*.5f;
     m_heightData[getIndex(BM)] = (hBL + hBR)*.5f;
-    m_heightData[getIndex(LM)] = (hTL + hBL)*.5f;
-    m_heightData[getIndex(MM)] = ((hTL + hTR + hBL + hBR)*.25f) + getPerturb();
+    m_heightData[getIndex(ML)] = (hTL + hBL)*.5f;
+    m_heightData[getIndex(MM)] = ((hTL + hTR + hBL + hBR)*.25f) + perturb;
+
+    subdivideSquare(TL, MM, depth-1);
+    subdivideSquare(ML, BM, depth-1);
+    subdivideSquare(TM, MR, depth-1);
+    subdivideSquare(MM, BR, depth-1);
+
 
 }
 
@@ -145,14 +210,22 @@ void Chunk::subdivideSquare(glm::vec2 topleft, glm::vec2 botright)
 void Chunk::initGL()
 {
 
-    glm::vec3 normals[VERTEX_WIDTH*VERTEX_HEIGHT];
-    glm::vec3 vertices[VERTEX_WIDTH*VERTEX_HEIGHT];
+    GLuint normalAttribLoc = glGetAttribLocation(m_shader, "normal");
+    GLuint positionAttribLoc = glGetAttribLocation(m_shader, "position");
+
+    glm::vec3 normals[(VERTEX_GRID_WIDTH+1)*(VERTEX_GRID_HEIGHT+1)];
+    glm::vec3 vertices[(VERTEX_GRID_WIDTH+1)*(VERTEX_GRID_HEIGHT+1)];
+
+    populateVertices(vertices);
+    populateNormals(vertices, normals);
 
 
-    GLfloat *vertexBufferData = new GLfloat[12*((VERTEX_WIDTH+1)*(VERTEX_HEIGHT))];
-    for(int i = 0; i < VERTEX_HEIGHT; i++) {
-        for(int j = 0; j < VERTEX_WIDTH + 1; j++) {
-            int bufferIndex = i*(VERTEX_WIDTH+1) + j;
+    GLfloat *vertexBufferData = new GLfloat[12*(VERTEX_GRID_WIDTH+1)*(VERTEX_GRID_HEIGHT)];
+    for(int i = 0; i < VERTEX_GRID_HEIGHT; i++) {
+        for(int j = 0; j < VERTEX_GRID_WIDTH + 1; j++) {
+            int bufferIndex = i*(VERTEX_GRID_WIDTH+1) + j;
+            int test = getIndex(j,i);
+
             vertexBufferData[12*bufferIndex] = vertices[getIndex(j,i)].x;
             vertexBufferData[12*bufferIndex+1] = vertices[getIndex(j,i)].y;
             vertexBufferData[12*bufferIndex+2] = vertices[getIndex(j,i)].z;
@@ -160,23 +233,40 @@ void Chunk::initGL()
             vertexBufferData[12*bufferIndex+4] = normals[getIndex(j,i)].y;
             vertexBufferData[12*bufferIndex+5] = normals[getIndex(j,i)].z;
 
-            vertexBufferData[12*bufferIndex+6] = vertices[getIndex(j+1,i)].x;
-            vertexBufferData[12*bufferIndex+7] = vertices[getIndex(j+1,i)].y;
-            vertexBufferData[12*bufferIndex+8] = vertices[getIndex(j+1,i)].z;
-            vertexBufferData[12*bufferIndex+9] = normals[getIndex(j+1,i)].x;
-            vertexBufferData[12*bufferIndex+10] = normals[getIndex(j+1,i)].y;
-            vertexBufferData[12*bufferIndex+11] = normals[getIndex(j+1,i)].z;
+            vertexBufferData[12*bufferIndex+6] = vertices[getIndex(j,i+1)].x;
+            vertexBufferData[12*bufferIndex+7] = vertices[getIndex(j,i+1)].y;
+            vertexBufferData[12*bufferIndex+8] = vertices[getIndex(j,i+1)].z;
+            vertexBufferData[12*bufferIndex+9] = normals[getIndex(j,i+1)].x;
+            vertexBufferData[12*bufferIndex+10] = normals[getIndex(j,i+1)].y;
+            vertexBufferData[12*bufferIndex+11] = normals[getIndex(j,i+1)].z;
 
+            int k = 10;
         }
     }
 
+
+
+/*
+    GLfloat vertexBufferData[] = {
+        0.f, 0.f, 0.f, 0.f, 0.f, 1.f,
+        1.f, 0.f, 0.f, 0.f, 0.f, 1.f,
+        0.f, 1.f, 0.f, 0.f, 0.f, 1.f,
+        1.f, 1.f, 0.f, 0.f, 0.f, 1.f,
+        0.f, 10.f, 0.f, 0.f, 0.f, 1.f,
+        1.f, 10.f, 0.f, 0.f, 0.f, 1.f,
+
+    };
+*/
     // VAO init
     glGenVertexArrays(1, &m_vaoID);
     glBindVertexArray(m_vaoID);
 
+
+
     // Buffer init
-    glGenBuffers(1, &m_vboID);
-    glBindBuffer(GL_ARRAY_BUFFER, m_vboID);
+    GLuint vboID;
+    glGenBuffers(1, &vboID);
+    glBindBuffer(GL_ARRAY_BUFFER, vboID);
 
 
     // @TODO: Pass your data to the GPU and specify how the attributes are organized. Recall
@@ -184,7 +274,8 @@ void Chunk::initGL()
     //        glVertexAttribPointer.
 
     // Give our vertices to OpenGL.
-    glBufferData(GL_ARRAY_BUFFER, 12*((VERTEX_WIDTH+1)*(VERTEX_HEIGHT))*sizeof(GLfloat), vertexBufferData, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 12*((VERTEX_GRID_WIDTH+1)*(VERTEX_GRID_HEIGHT))*sizeof(GLfloat), vertexBufferData, GL_STATIC_DRAW);
+
 
     // Expose vertices to shader
     glEnableVertexAttribArray(positionAttribLoc);
@@ -193,17 +284,17 @@ void Chunk::initGL()
        3,                  // num vertices per element (3 for triangle)
        GL_FLOAT,           // type
        GL_FALSE,           // normalized?
-       sizeof(GLfloat) * 6,                  // stride
+       6*sizeof(GLfloat),                  // stride
        (void*)0            // array buffer offset
     );
 
-    glEnableVertexAttribArray(normalAttribLoc);
+   glEnableVertexAttribArray(normalAttribLoc);
     glVertexAttribPointer(
        normalAttribLoc,
        3,                  // num vertices per element (3 for triangle)
        GL_FLOAT,           // type
-       GL_TRUE,            // normalized?
-       sizeof(GLfloat) * 6,                  // stride
+       GL_FALSE,            // normalized?
+       6*sizeof(GLfloat),                  // stride
        (void*)(3*sizeof(GLfloat))            // array buffer offset
     );
 
@@ -214,6 +305,9 @@ void Chunk::initGL()
     // Clean up and unbind.
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+
+    //delete[] vertexBufferData;
+
 
 }
 
@@ -226,7 +320,7 @@ void Chunk::initGL()
 inline int Chunk::getIndex(const glm::vec2 &c)
 {
     assert(c.x - (int)c.x < .001);
-    return getIndex(c.y, c.x);
+    return getIndex(c.x, c.y);
 }
 
 /**
@@ -234,13 +328,14 @@ inline int Chunk::getIndex(const glm::vec2 &c)
  * Can be used to index into m_terrain or m_normalMap.
  * Returns -1 if the grid coordinate entered is not valid.
  */
-inline int Chunk::getIndex(int row, int col)
+inline int Chunk::getIndex(int col, int row)
 {
-    if (row < 0 || row >= VERTEX_WIDTH + 1 || col < 0 || col >= VERTEX_HEIGHT+1)
+    if (row < 0 || row >= VERTEX_GRID_WIDTH + 1 || col < 0 || col >= VERTEX_GRID_HEIGHT+1)
         return -1;
 
-    return row * VERTEX_WIDTH + col;
+    return row * (VERTEX_GRID_WIDTH+1) + col;
 }
+
 
 /**
  * Computes the amount to perturb the height of the vertex currently being processed.
@@ -248,9 +343,12 @@ inline int Chunk::getIndex(int row, int col)
  *
  * @param depth The current recursion depth
  */
-double Chunk::getPerturb()
+double Chunk::getPerturb(int cur_depth)
 {
-    return (rand() % 200-100) / 100.0;
+    double scale = ROUGHNESS *pow(1 - (double)cur_depth / MAX_DEPTH, DECAY);
+    //double scale = ROUGHNESS*pow(.5f,(double) cur_depth);
+    double out =  scale * ((rand() % 200-100) / 100.0);
+    return out;
 }
 
 void Chunk::populateVertices(glm::vec3 *verticesOut) {
@@ -258,19 +356,29 @@ void Chunk::populateVertices(glm::vec3 *verticesOut) {
     assert(m_planePos.x >= 0 && m_planePos.x < 1 && m_planePos.y >= 0 && m_planePos.y < 1);
 
     float r = .5f;
-    for(int i = 0; i < VERTEX_HEIGHT+1; i++) {
-        for(int j = 0; j < VERTEX_WIDTH+1; j++) {
-            int detailX = VERTEX_WIDTH*m_numChunksX;
-            int detailY = VERTEX_HEIGHT*m_numChunksX;
+    for(int i = 0; i < VERTEX_GRID_HEIGHT+1; i++) {
+        for(int j = 0; j < VERTEX_GRID_WIDTH+1; j++) {
+
+            //plane
+            /*verticesOut[i*(VERTEX_GRID_WIDTH+1) + j] =
+                    glm::vec3(((float)j)/VERTEX_GRID_WIDTH,
+                              m_heightData[i*(VERTEX_GRID_WIDTH+1) + j],
+                              ((float)i)/VERTEX_GRID_HEIGHT);*/
+
+            //wraps to sphere
+
+            int detailX = VERTEX_GRID_WIDTH*m_numChunksX;
+            int detailY = VERTEX_GRID_HEIGHT*m_numChunksX;
             float theta = 2*j*M_PI/detailX + 2*M_PI*m_planePos.x;
             float phi = -M_PI + i*M_PI/detailY + M_PI*m_planePos.y;
             glm::vec3 p = glm::vec3(r*sin(phi)*cos(theta), r*cos(phi), r*sin(phi)*sin(theta));
 
             glm::vec3 n = glm::normalize(p);
 
-            float displacement = 1.f/glm::max(VERTEX_WIDTH, VERTEX_HEIGHT);
+            float displacement = m_heightData[getIndex(j,i)]; //???????????
             p = p + n*displacement;
-            verticesOut[i*VERTEX_WIDTH + j] = p;
+            verticesOut[getIndex(j,i)] = p;
+
 
         }
     }
@@ -278,13 +386,15 @@ void Chunk::populateVertices(glm::vec3 *verticesOut) {
 
 void Chunk::populateNormals(glm::vec3 *verticesIn, glm::vec3 *normalsOut) {
     // For each vertex in the 2D grid...
-    for (int row = 0; row < VERTEX_HEIGHT+1; row++) {
-        for (int column = 0; column < VERTEX_WIDTH+1; column++) {
+    for (int row = 0; row < VERTEX_GRID_HEIGHT+1; row++) {
+        for (int column = 0; column < VERTEX_GRID_WIDTH+1; column++) {
             // 2D coordinate of the vertex on the terrain grid.
             const glm::vec2 gridPosition(column, row);
 
             // Index into the 1D position and normal arrays.
             const int terrainIndex = getIndex(gridPosition);
+
+            assert(terrainIndex >=0);
 
             // 3D position of the vertex.
             const glm::vec3 &vertexPosition = verticesIn[terrainIndex];
@@ -303,7 +413,7 @@ void Chunk::populateNormals(glm::vec3 *verticesIn, glm::vec3 *normalsOut) {
             // @TODO: Compute cross products for each neighbor.
             glm::vec3 *normals = new glm::vec3[numNeighbors];
             for(int i = 0; i < numNeighbors; i++) {
-                normals[i] = glm::cross(vertToNeighbors[i], vertToNeighbors[(i+1)%numNeighbors]);
+                normals[i] = -glm::cross(vertToNeighbors[i], vertToNeighbors[(i+1)%numNeighbors]);
             }
 
 
@@ -339,5 +449,29 @@ QList<glm::vec3*> Chunk::getSurroundingVertices(const glm::vec2 &coordinate, glm
 
 bool Chunk::isVisible(glm::vec3 cameraPos, float thetaWidth, float thetaHeight) {
     return true;
+}
+
+void Chunk::drawNormals(glm::vec3 * vertices, glm::vec3 *normals){
+    glColor3f(1,0,0);
+
+    for (int row = 0; row < VERTEX_GRID_HEIGHT+1; row++)
+    {
+        for (int column = 0; column < VERTEX_GRID_WIDTH; column++)
+        {
+            glBegin(GL_LINES);
+
+            glm::vec3 curVert = vertices[getIndex(column, row)];
+            glm::vec3 curNorm = normals[getIndex(column, row)];
+
+            glNormal3f(curNorm.x, curNorm.y, curNorm.z);
+            glVertex3f(curVert.x, curVert.y, curVert.z);
+            glVertex3f(curVert.x +curNorm.x,
+                       curVert.y + curNorm.y,
+                       curVert.z + curNorm.z);
+
+            glEnd();
+        }
+    }
+
 }
 

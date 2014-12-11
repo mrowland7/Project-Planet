@@ -9,6 +9,8 @@ uniform mat4 p;
 uniform mat4 v;
 uniform mat4 m;
 in vec3 position; // Position of the vertex
+uniform vec3 lightPosition;
+uniform vec3 lightColor;
 uniform mat4 shadow_v; // Modelview Projection matrix. This maps the vertices in model (object) space to world coordinates
 
 void main(){

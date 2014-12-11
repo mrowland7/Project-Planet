@@ -63,7 +63,7 @@ void ShapesScene::init()
 
     // Remember for large arrays you should use new
     GLfloat vertexData[] = {
-        -1, -1, 0, // Position 1
+        -1, -1, 0, // Position 1positionAttribLoc
         0,  0, 1, // Normal 1
         1, -1, 0, // Position 2
         0,  0, 1, // Normal 2

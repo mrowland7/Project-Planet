@@ -1,20 +1,19 @@
 #version 330 core
 
+in vec3 color;
 in vec4 pos_shadowSpace;
 uniform sampler2D tex;
 out vec4 fragColor;
 
 void main(){
-    //depths in the 0.54- 0.63 range (for the first thing)
-    //x/y are a little bit higher than 0.5 (0.51 ish)
+
+//    //MAX's CODE
+    fragColor = vec4(color,1 );
 
     float depthVal = pos_shadowSpace.z / pos_shadowSpace.w;//11.0; // Z of the current object in sun-space
     vec2 adj = vec2((pos_shadowSpace.x / pos_shadowSpace.w + 1) / 2,
                     (pos_shadowSpace.y / pos_shadowSpace.w + 1) / 2);
     float shadowVal = texture(tex, adj).x;
-//    float altShadowVal = texture(tex, adj).z;
-
-//    fragColor = vec4(texture(tex, pos_shadowSpace.xy).xyz, 1);
 
     float diff = depthVal - shadowVal; // gap between the two. + = difference
 
@@ -38,9 +37,14 @@ void main(){
         else {
             fragColor = vec4(0, 0, 1, 1);
         }
-//        fragColor = vec4(depthVal, depthVal, depthVal, 1);
+        fragColor = vec4(depthVal, depthVal, depthVal, 1);
 //        fragColor = vec4(pos_shadowSpace.xyz, 1);
 //        fragColor = vec4(shadowVal, shadowVal, shadowVal, 1);
-//        fragColor = vec4(altShadowVal, altShadowVal, altShadowVal, 1);
+//    }
+//    else {
+//        fragColor = vec4(0, 1, 0 ,1);
+//    }
     }
+
+//    fragColor = vec4(color,1 );
 }
