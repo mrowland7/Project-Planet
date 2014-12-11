@@ -1,6 +1,7 @@
 #include "ResourceLoader.h"
 #include <QFile>
 #include <QTextStream>
+#include <vector>
 
 ResourceLoader::ResourceLoader()
 {
@@ -77,9 +78,9 @@ GLuint ResourceLoader::loadShaders(const char * vertex_file_path,const char * fr
     glGetProgramiv(programId, GL_LINK_STATUS, &Result);
     glGetProgramiv(programId, GL_INFO_LOG_LENGTH, &InfoLogLength);
     if (!Result && InfoLogLength > 0) {
-        std::vector<char> ProgramErrorMessage(InfoLogLength);
-        glGetProgramInfoLog(programId, InfoLogLength, NULL, &ProgramErrorMessage[0]);
-        fprintf(stderr, "Error linking shader: %s\n", &ProgramErrorMessage[0]);
+//        std::vector<char> ProgramErrorMessage(InfoLogLength);
+//        glGetProgramInfoLog(programId, InfoLogLength, NULL, &ProgramErrorMessage[0]);
+//        fprintf(stderr, "Error linking shader: %s\n", &ProgramErrorMessage[0]);
     }
 
     glDeleteShader(VertexShaderID);

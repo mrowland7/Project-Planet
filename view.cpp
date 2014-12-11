@@ -20,12 +20,16 @@ View::View(QWidget *parent) : QGLWidget(parent)
     connect(&timer, SIGNAL(timeout()), this, SLOT(tick()));
 
     m_sunCamera = new CamtransCamera();
-    m_sunCamera->orientLook(glm::vec4(0, 1, 4, 0),
-                            glm::vec4(0, -1, -4, 0),
+    m_sunCamera->orientLook(glm::vec4(0, 1, 2, 0),
+                            glm::vec4(0, -1, -2, 0),
                             glm::vec4(0, 1, 0, 0));
+//    m_sunCamera->setHeightAngle(125);
     m_camera = new CamtransCamera();
-//    m_camera->orientLook(glm::vec4(0, 0, 2, 0),
-//                            glm::vec4(0, 0, -1, 0),
+    m_camera->orientLook(glm::vec4(0, 1, 2, 0),
+                            glm::vec4(0, -1, -2, 0),
+                            glm::vec4(0, 1, 0, 0));
+//    m_camera->orientLook(glm::vec4(2, 2, 4, 0),
+//                            glm::vec4(-2, -2, -4, 0),
 //                            glm::vec4(0, 1, 0, 0));
 }
 
@@ -134,9 +138,6 @@ void View::renderShadowmap() {
 void View::renderFinal() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    // TODO: how to actually pass this?
-
-
     glActiveTexture(GL_TEXTURE0);
     glUniform1i(glGetUniformLocation(m_shader, "tex"), 0);
     glBindTexture(GL_TEXTURE_2D, m_shadowmapColorAttachment);
@@ -148,11 +149,10 @@ void View::renderFinal() {
 }
 
 void View::renderFromCamera(CamtransCamera* camera, GLuint shader) {
-    glClearColor(0, 0, 0, 0);
+    glUseProgram(shader);
+    glClearColor(0, 0.5, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glUseProgram(shader);
-    glm::mat4 m4 = glm::mat4(1.0f);
     // TODO: bad bad bad bad bad
     glm::mat4x4 shadowV = m_sunCamera->getProjectionMatrix() * m_sunCamera->getViewMatrix();
     glUniformMatrix4fv(glGetUniformLocation(shader, "shadow_v"), 1, GL_FALSE, &shadowV[0][0]);
@@ -169,6 +169,7 @@ void View::renderFromCamera(CamtransCamera* camera, GLuint shader) {
     glBindVertexArray(m_vaoID);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glDrawArrays(GL_TRIANGLES, 6, 6);
+    glDrawArrays(GL_TRIANGLES, 12, 6);
     glBindVertexArray(0);
 }
 
@@ -184,13 +185,20 @@ void View::initSquare() {
        -0.5f, -0.5f, 0.0f,
         0.5f, -0.5f, 0.0f,
        -0.5f, 0.5f, 0.0f,
+        // Square 3
+        1.8f, 0.0f, -4.0f,
+        1.8f, 1.8f, -4.0f,
+        0.8f, 1.8f, -4.0f,
+        0.8f, 0.0f, -4.0f,
+        1.8f, 0.0f, -4.0f,
+        0.8f, 1.8f, -4.0f,
         // Square 2
         0.8f, -0.2f, -2.0f,
         0.8f, 0.8f, -2.0f,
        -0.2f, 0.8f, -2.0f,
        -0.2f, -0.2f, -2.0f,
         0.8f, -0.2f, -2.0f,
-       -0.2f, 0.8f, -2.0f
+       -0.2f, 0.8f, -2.0f,
     };
 
     glGenVertexArrays(1, &m_vaoID);
@@ -272,10 +280,15 @@ void View::tick()
     // Get the number of seconds since the last tick (variable update rate)
     float seconds = time.restart() * 0.001f;
 
+    std::cout << "Gap: " << seconds << std::endl;
     // TODO: Implement the demo update here
 
     // TODO: check if there's a new section visible, if so, generate more terrain
-
+//    float newY = 1 + glm::sin(time.currentTime().second() * 1.0);
+//    float newZ = 2 + glm::sin(time.currentTime().second() * 1.0);
+//    m_sunCamera->orientLook(glm::vec4(0, newY, newZ, 0),
+//                            glm::vec4(0, 0 - newY, 0 - newZ, 0),
+//                            glm::vec4(0, 1, 0, 0));
 
     // Flag this view for repainting (Qt will call paintGL() soon after)
     update();
