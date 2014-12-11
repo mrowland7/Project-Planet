@@ -1,6 +1,7 @@
 #version 330 core
 
 out vec3 color; // Computed color for this vertex
+out vec4 pos_shadowSpace;
 
 // Transformation matrices
 uniform mat4 p;
@@ -9,22 +10,46 @@ uniform mat4 m;
 in vec3 position; // Position of the vertex
 in vec3 normal;   // Normal of the vertex
 uniform mat4 mvp; // Modelview Projection matrix. This maps the vertices in model (object) space to world coordinates
+uniform mat4 shadow_mvp; // Modelview Projection matrix. This maps the vertices in model (object) space to world coordinates
 
-// Light data
-//const int MAX_LIGHTS = 10;
-//uniform int lightTypes[MAX_LIGHTS];         // 0 for point, 1 for directional
-//uniform vec3 lightPositions[MAX_LIGHTS];    // For point lights
-//uniform vec3 lightDirections[MAX_LIGHTS];   // For directional lights
-//uniform vec3 lightAttenuations[MAX_LIGHTS]; // Constant, linear, and quadratic term
-//uniform vec3 lightColors[MAX_LIGHTS];
+//Light data
+uniform vec3 lightPosition;
+uniform vec3 lightColor;
 
 void main(){
-//    gl_Position = mvp * vec4(position.xyz, 1.0);
+    vec3 colorVal = vec3(1,1,1);
+
     vec4 position_cameraSpace = v * m * vec4(position, 1.0);
-    vec4 normal_cameraSpace = vec4(normalize(mat3(transpose(inverse(v * m))) * normal), 0);
+    //vec4 normal_cameraSpace = vec4(normalize(mat3(transpose(inverse(v * m))) * normal), 0);
 
     vec4 position_worldSpace = m * vec4(position, 1.0);
     vec4 normal_worldSpace = vec4(normalize(mat3(transpose(inverse(m))) * normal), 0);
+
+    color = colorVal*.3;
+
+    //LIGHTING
+    vec4 vertexToLight = normalize(vec4(lightPosition,1) - position_worldSpace); //in world space
+
+    // Add diffuse component
+    float diffuseIntensity = clamp(.7*dot(vertexToLight, normal_worldSpace),0,1);
+    color += max(vec3(0), lightColor * colorVal * diffuseIntensity);
+
+    // Add specular component
+    //vec4 lightReflection = normalize(-reflect(vertexToLight, normal_cameraSpace));
+    //vec4 eyeDirection = normalize(vec4(0,0,0,1) - position_cameraSpace);
+    //float specIntensity = pow(max(0.0, dot(eyeDirection, lightReflection)), shininess);
+    //color += max (vec3(0), lightColors[i] * specular_color * specIntensity);
+
+
+
+    pos_shadowSpace = shadow_mvp * vec4(position, 1.0);
+    pos_shadowSpace = 0.5 * (pos_shadowSpace + vec4(1, 1, 1, 1));
+
     gl_Position = p * position_cameraSpace;
-    color = vec3(0, 1.0, 0);//clamp(color, 0.0, 1.0) * allBlack;
+    //clamp(color, 0.0, 1.0) * allBlack;
+
+    //color = vec3(normal);
+
+
+
 }

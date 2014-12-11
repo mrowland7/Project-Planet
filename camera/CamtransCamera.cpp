@@ -16,9 +16,9 @@ CamtransCamera::CamtransCamera()
     m_heightAngle = 2 * M_PI / 6;
     // not this
     m_widthAngle = glm::atan(glm::tan(m_heightAngle / 2) * m_aspectRatio) * 2;
-    m_eye = glm::vec4(2, 2, 2, 0);
+    m_eye = glm::vec4(0, 0, 2, 0);
     m_look = glm::normalize(glm::vec4(0, 0, 0, 0) - m_eye);
-    m_up = glm::vec4(0, 1, 0, 0);
+    m_up = glm::vec4(.1, 1, 0, 0);
 
     orientLook(m_eye, m_look, m_up);
 
@@ -138,7 +138,8 @@ void CamtransCamera::translate(const glm::vec4 &v)
                             0, 0, 1, v.z,
                             0, 0, 0, 1));
 
-    m_eye = tmat * m_eye;
+    glm::vec4 newval = tmat * glm::vec4(m_eye.x, m_eye.y, m_eye.z, 1);
+    m_eye = newval;
 
 }
 

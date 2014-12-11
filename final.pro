@@ -200,7 +200,9 @@ macx {
 
 OTHER_FILES += \
     shaders/shader.frag \
-    shaders/shader.vert
+    shaders/shader.vert \
+    shaders/shadowmap.vert \
+    shaders/shadowmap.frag
 
 RESOURCES += \
     shaders/shaders.qrc

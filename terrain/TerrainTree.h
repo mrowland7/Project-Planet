@@ -14,10 +14,13 @@ public:
     void update(glm::vec3 cameraPos, float thetaWidth, float thetaHeight);
     void draw(glm::vec3 cameraPos, float thetaWidth, float thetaHeight);
 
+    glm::mat4 getModel();
+    void setModel(glm::mat4 model);
+
 private:
     Chunk *m_root;
-    GLint m_shader;
     int getLevel(glm::vec3 cameraPos, float thetaWidth, float thetaHeight);
+    glm::mat4 m_model;
 };
 
 #endif // TERRAINTREE_H
