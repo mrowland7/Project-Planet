@@ -198,10 +198,10 @@ void View::renderFromCamera(CamtransCamera* camera, GLuint shader) {
     //setLights
     LightData ld = {0, glm::vec3(1,1,0), glm::vec3(m_sunCamera->getPosition())};
     this->setLight(ld);
-    glUniform3f(glGetUniformLocation(m_shader, "objColor"), 0.5, 0.5, 0.1);
+    glUniform3f(glGetUniformLocation(m_shader, "objColor"), 1, 1, 1);
 
-
-    m_tree->draw(glm::vec3(), 0, 0, shader);
+    m_tree->update(glm::vec3(m_camera->getPosition()));
+    m_tree->draw(glm::vec3(m_camera->getPosition()), shader);
 }
 
 void View::initSquare() {

@@ -52,17 +52,17 @@ vec2 rotate(vec2 blah)
 void main()
 {
     //LIGHTING
-    vec3 _color = vec3(1,1,1);
     // Add diffuse component
-    vec3 ambient = _color*.2f;
-    float diffuseIntensity = clamp(.7*dot(vertexToLight, normalWorldSpace),0,1);
-    vec3 diffuse = max(vec3(0), _lightColor * _color * diffuseIntensity);
+    vec3 ambient = color*.1f;
+    float diffuseIntensity = clamp(.9*dot(vertexToLight, normalWorldSpace),0,1);
+    vec3 diffuse = max(vec3(0), _lightColor * color * diffuseIntensity);
 
     // Add specular component
     //vec4 lightReflection = normalize(-reflect(vertexToLight, normal_cameraSpace));
     //vec4 eyeDirection = normalize(vec4(0,0,0,1) - position_cameraSpace);
     //float specIntensity = pow(max(0.0, dot(eyeDirection, lightReflection)), shininess);
     //color += max (vec3(0), lightColors[i] * specular_color * specIntensity);
+
     vec4 planetTexture = sampleTextures();
     vec3 realColor = planetTexture.xyz + ambient;//color + ambient + diffuse;
 //    vec3 realColor = color + ambient + diffuse;
@@ -80,6 +80,7 @@ void main()
             || adj.y <= 0 || adj.y >= 1) {
         fragColor = vec4(1, 0, 0 ,1);
     }
+
 //    // Yellow: depth value bad
 //    else if (depthVal < 0 || depthVal > 1
 //             || shadowVal < 0 || shadowVal > 1) {
@@ -113,5 +114,6 @@ void main()
 //        fragColor = vec4(shadowVal, shadowVal, shadowVal, 1);
 //    }
     }
-//    fragColor = vec4(texture(snowTexture, adj).xyz, 1);
+
 }
+

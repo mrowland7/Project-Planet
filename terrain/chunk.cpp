@@ -30,6 +30,10 @@ Chunk::~Chunk() {
 void Chunk::draw(GLint shader) {
     glUseProgram(shader);
 
+
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
     glBindVertexArray(m_vaoID);
     for (int row = 0; row < VERTEX_GRID_WIDTH; row++){
         glDrawArrays(GL_TRIANGLE_STRIP, (VERTEX_GRID_WIDTH+1)*2*row, (VERTEX_GRID_WIDTH+1)*2);
@@ -50,11 +54,22 @@ void Chunk::draw(GLint shader) {
 
 }
 
-void Chunk::drawRecursive(glm::vec3 cameraPos, float thetaWidth, float thetaHeight, int level, GLint shader) {\
+void Chunk::drawRecursive(glm::vec3 cameraPos, int level, GLint shader) {
+
+    if(this->isInView(cameraPos, 0.f)) {
+        m_biomeData[0] = .5f;
+    } else {
+        m_biomeData[0] = 0.f;
+    }
+
 
     bool allChildrenExist = m_children[0] != 0 && m_children[1] != 0
             && m_children[2] != 0 && m_children[3] != 0;
-    bool tileIsVisible = isVisible(cameraPos, thetaWidth, thetaHeight);
+    bool tileIsVisible = isInView(cameraPos, 1000000.f);
+
+    if(!tileIsVisible) {
+        bool debug = isInView(cameraPos, 1000000.f);
+    }
 
     if(m_level > level || !tileIsVisible) {
         return;
@@ -66,13 +81,15 @@ void Chunk::drawRecursive(glm::vec3 cameraPos, float thetaWidth, float thetaHeig
     }
 
     for(int i = 0; i < 4; i++) {
-        m_children[i]->drawRecursive(cameraPos, thetaWidth, thetaHeight, level, shader);
+        m_children[i]->drawRecursive(cameraPos, level, shader);
     }
 
 }
 
-void Chunk::update(glm::vec3 cameraPos, float thetaWidth, float thetaHeight, int level) {
-    if(m_level +1 <= level) {
+void Chunk::update(glm::vec3 cameraPos, int level) {
+    std::cout << level << std::endl;
+
+    if(m_level +1 <= level && isInView(cameraPos, 0/*.01f*pow(.5,level)*/)) {
         glm::vec2 childSize = glm::vec2(1.f/(2*m_numChunksX), 1.f/(2*m_numChunksX));
         for(int i = 0; i < 4; i++) {
             if(m_children[i] == 0) {
@@ -85,7 +102,7 @@ void Chunk::update(glm::vec3 cameraPos, float thetaWidth, float thetaHeight, int
                 m_children[i]->generate(m_heightData, m_biomeData, i);
 
             }
-            m_children[i]->update(cameraPos, thetaWidth, thetaHeight, level);
+            m_children[i]->update(cameraPos, level);
         }
     }
 }
@@ -99,6 +116,7 @@ void Chunk::generate(float *parentHeightData, float *parentBiomeData, int quadra
 
     for(int i = 0; i < VERTEX_GRID_WIDTH*(VERTEX_GRID_WIDTH+1); i++) {
         m_heightData[i] = 0;
+        m_biomeData[i] = 0;
     }
 
 
@@ -130,6 +148,12 @@ void Chunk::generateRoot() {
 
     m_heightData = new float[(VERTEX_GRID_WIDTH+1)*(VERTEX_GRID_WIDTH+1)];
     m_biomeData = new float[(VERTEX_GRID_WIDTH+1)*(VERTEX_GRID_WIDTH+1)];
+
+    //TODO: BAD
+    for(int i = 0; i < VERTEX_GRID_WIDTH*(VERTEX_GRID_WIDTH+1); i++) {
+        m_heightData[i] = 0;
+        m_biomeData[i] = 0;
+    }
 
 
     m_heightData[getIndex(0,0)] = 0;
@@ -251,8 +275,8 @@ void Chunk::subdivideSquareDiamond1(glm::vec2 topleft, glm::vec2 botright){
     float currGridWidth =  VERTEX_GRID_WIDTH/(botright.x - topleft.x);
     int globalDepth = 1+log(currGridWidth*m_numChunksX)/log(2);
 
-    m_heightData[getIndex(MM)] = std::min(MAX_MOUNTAIN_HEIGHT,
-                                          ((hTL + hTR + hBL + hBR)*.25f) + getPerturb(globalDepth));
+    m_heightData[getIndex(MM)] = glm::clamp(((hTL + hTR + hBL + hBR)*.25f) + getPerturb(globalDepth),
+                                            -MAX_MOUNTAIN_HEIGHT, MAX_MOUNTAIN_HEIGHT);
 }
 
 void Chunk::subdivideSquareDiamond2(glm::vec2 topleft, glm::vec2 botright){
@@ -291,22 +315,37 @@ void Chunk::subdivideSquareDiamond2(glm::vec2 topleft, glm::vec2 botright){
     float hBBM = getIndex(BBM) != -1 ? m_heightData[getIndex(BBM)] : (hBL + hMM + hBR)/3.f;
     float hMRR = getIndex(MRR) != -1 ? m_heightData[getIndex(MRR)] : (hTR + hMM + hBR)/3.f;
 
-    //wrapping
 
 
 
     float currGridWidth =  VERTEX_GRID_WIDTH/(botright.x - topleft.x);
     int globalDepth = 1+log(currGridWidth*m_numChunksX)/log(2);
 
-    m_heightData[getIndex(TM)] = std::min(MAX_MOUNTAIN_HEIGHT,
-                                          (hTL + hTR + hMM + hTTM)*.25f + getPerturb(globalDepth));
-    m_heightData[getIndex(MR)] = std::min(MAX_MOUNTAIN_HEIGHT,
-                                          (hTR + hBR + hMM + hMRR)*.25f + getPerturb(globalDepth));
-    m_heightData[getIndex(BM)] = std::min(MAX_MOUNTAIN_HEIGHT,
-                                          (hBL + hBR + hMM + hBBM)*.25f + getPerturb(globalDepth));
-    m_heightData[getIndex(ML)] = std::min(MAX_MOUNTAIN_HEIGHT,
-                                          (hTL + hBL + hMM + hMLL)*.25f + getPerturb(globalDepth));
+    m_heightData[getIndex(TM)] = glm::clamp((hTL + hTR + hMM + hTTM)*.25f + getPerturb(globalDepth),
+                                            -MAX_MOUNTAIN_HEIGHT, MAX_MOUNTAIN_HEIGHT);
+    m_heightData[getIndex(MR)] = glm::clamp((hTR + hBR + hMM + hMRR)*.25f + getPerturb(globalDepth),
+                                            -MAX_MOUNTAIN_HEIGHT, MAX_MOUNTAIN_HEIGHT);
+    m_heightData[getIndex(BM)] = glm::clamp((hBL + hBR + hMM + hBBM)*.25f + getPerturb(globalDepth),
+                                            -MAX_MOUNTAIN_HEIGHT, MAX_MOUNTAIN_HEIGHT);
+    m_heightData[getIndex(ML)] = glm::clamp((hTL + hBL + hMM + hMLL)*.25f + getPerturb(globalDepth),
+                                          -MAX_MOUNTAIN_HEIGHT, MAX_MOUNTAIN_HEIGHT);
 
+    float thing = (hTL + hTR + hMM + hTTM)*.25f + getPerturb(globalDepth);
+    float wtf = std::min(thing, MAX_MOUNTAIN_HEIGHT);
+    if(wtf > .1) {
+
+        int debug = 4;
+
+        int asdfasdf = 12312;
+
+
+
+        float val = .1;
+        val = (float)std::min(val, .01f);
+        int blayh = val;
+    }
+
+    //wrapping
     if(botright.x >= VERTEX_GRID_WIDTH) {
         float otherside = m_heightData[getIndex(0,(int)MRR.y)];
         m_heightData[getIndex(MR)] = otherside;
@@ -518,15 +557,11 @@ void Chunk::populateVertices(glm::vec3 *verticesOut) {
 
             //wraps to sphere
 
-            int detailX = VERTEX_GRID_WIDTH*m_numChunksX;
-            int detailY = VERTEX_GRID_WIDTH*m_numChunksX;
-            float theta = 2*j*M_PI/detailX + 2*M_PI*m_planePos.x;
-            float phi = -M_PI + i*M_PI/detailY + M_PI*m_planePos.y;
-            glm::vec3 p = glm::vec3(r*sin(phi)*cos(theta), r*cos(phi), r*sin(phi)*sin(theta));
 
+            glm::vec3 p = getPointOnSphere(glm::vec2(j,i));
             glm::vec3 n = glm::normalize(p);
 
-            float displacement = m_heightData[getIndex(j,i)]; //???????????
+            float displacement = glm::max(0.03f, m_heightData[getIndex(j,i)]);
             p = p + n*displacement;
             verticesOut[getIndex(j,i)] = p;
 
@@ -576,10 +611,62 @@ void Chunk::populateNormals(glm::vec3 *verticesIn, glm::vec3 *normalsOut) {
             }
             normalsOut[terrainIndex] = glm::normalize(sum);
 
+
+            //smooth out seam
+            for(int i = 0; i <= VERTEX_GRID_WIDTH; i++) {
+                //glm::vec3 avg = glm::normalize(normals[getIndex(0,i)] + normals[getIndex(VERTEX_GRID_WIDTH, i)]);
+                //normalsOut[getIndex(0,i)] = avg;
+                //normalsOut[getIndex(VERTEX_GRID_WIDTH,i)] = avg;
+            }
+
             delete[] vertToNeighbors;
             delete[] normals;
         }
     }
+}
+
+bool Chunk::isInView(glm::vec3 cameraLoc, float error) {
+    isInView(cameraLoc, cameraLoc - glm::vec3(0,0,0), error);
+}
+
+bool Chunk::isInView(glm::vec3 cameraLoc, glm::vec3 dir, float error){
+    if(m_level <= 1) {
+        //allways show outer layers
+        return true;
+    }
+    //ray plane intersection
+    glm::vec3 p_0 = getPointOnSphere(glm::vec2(0,0));
+    glm::vec3 p_1 = getPointOnSphere(glm::vec2(VERTEX_GRID_WIDTH, 0));
+    glm::vec3 p_2 = getPointOnSphere(glm::vec2(0, VERTEX_GRID_WIDTH));
+    glm::vec3 n = glm::normalize(glm::cross(p_1 - p_0, p_2 - p_0));
+    glm::vec3 l = glm::normalize(dir);
+    glm::vec3 l_0 = cameraLoc;
+    float d = glm::dot(p_0 - l_0, n)/glm::dot(l,n);
+    glm::vec3 planeLoc = l_0 + d*l;
+
+    //if facing the wrong way
+    if(glm::dot(n, dir) > 0) {
+        //return false;
+    }
+
+    //check to see if point is within bounds;
+    float width = glm::max(glm::length(p_0-p_1), glm::length(p_0-p_2));
+    float x = glm::dot((planeLoc-p_0), glm::normalize(p_1-p_0));
+    float y = glm::dot((planeLoc-p_0), glm::normalize(p_2-p_0));
+
+    if(-error <= x && x <= width + error && -error <= y && y <= width + error) {
+        return true;
+    }
+    return false;
+}
+
+glm::vec3 Chunk::getPointOnSphere(glm::vec2 coord) {
+    float r = RADIUS;
+    int detailX = VERTEX_GRID_WIDTH*m_numChunksX;
+    int detailY = VERTEX_GRID_WIDTH*m_numChunksX;
+    float theta = 2*coord.x*M_PI/detailX + 2*M_PI*m_planePos.x;
+    float phi = -M_PI + coord.y*M_PI/detailY + M_PI*m_planePos.y;
+    return glm::vec3(r*sin(phi)*cos(theta), r*cos(phi), r*sin(phi)*sin(theta));
 }
 
 QList<glm::vec3*> Chunk::getSurroundingVertices(const glm::vec2 &coordinate, glm::vec3 *vertices)
@@ -598,9 +685,6 @@ QList<glm::vec3*> Chunk::getSurroundingVertices(const glm::vec2 &coordinate, glm
     return vecs;
 }
 
-bool Chunk::isVisible(glm::vec3 cameraPos, float thetaWidth, float thetaHeight) {
-    return true;
-}
 
 void Chunk::drawNormals(glm::vec3 * vertices, glm::vec3 *normals){
     glColor3f(1,0,0);
