@@ -9,10 +9,17 @@ in vec4 pos_shadowSpace;
 uniform sampler2D tex;
 out vec4 fragColor;
 
+vec2 rotate(vec2 blah, float rads) {
+    float cr = cos(rads);
+    float sr = sin(rads);
+    return blah;
+//    return vec2(
+//                blah.x * cr - blah.y * sr,
+//                blah.x * sr + blah.y * cr
+//                );
+}
+
 void main(){
-
-    //MAX's CODE
-
     //LIGHTING
     vec3 _color = vec3(1,1,1);
     // Add diffuse component
@@ -28,7 +35,8 @@ void main(){
 
     vec3 realColor = color + ambient + diffuse;
 
-    float depthVal = pos_shadowSpace.z / pos_shadowSpace.w;//11.0; // Z of the current object in sun-space
+    float depthValUnadjusted = pos_shadowSpace.z / pos_shadowSpace.w;//11.0; // Z of the current object in sun-space
+    float depthVal = (depthValUnadjusted - 0.999) * 1000; // hack hack hack
     vec2 adj = vec2((pos_shadowSpace.x / pos_shadowSpace.w + 1) / 2,
                     (pos_shadowSpace.y / pos_shadowSpace.w + 1) / 2);
     float shadowVal = texture(tex, adj).x;
@@ -48,12 +56,13 @@ void main(){
     else {
         float visibility = 1.0;
         float sampleSpread = 1000;
-        //pseudo-rotated grid
+        //four pseudo-random-rotated points, rotated more around a grid
+        float randomRotate = asin(gl_FragCoord.x);
         vec2 rotatedSamples[4] = vec2[] (
-                vec2(-.8, .1) / sampleSpread,
-                vec2(-.2, -.8) / sampleSpread,
-                vec2(.25, .75) / sampleSpread,
-                vec2(.87, -.12) / sampleSpread
+                rotate(vec2(-.8, .1), randomRotate) / sampleSpread,
+                rotate(vec2(-.2, -.8), randomRotate) / sampleSpread,
+                rotate(vec2(.25, .75), randomRotate) / sampleSpread,
+                rotate(vec2(.87, -.12), randomRotate) / sampleSpread
                 );
         for (int i = 0; i < 4; i++) {
             float val = texture(tex, adj + rotatedSamples[i]).x;

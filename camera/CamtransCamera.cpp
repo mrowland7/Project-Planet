@@ -10,7 +10,7 @@
 
 CamtransCamera::CamtransCamera()
 {
-    m_near = 1.0;
+    m_near = .001;
     m_far = 11.0;
     m_aspectRatio = 1.0;
     m_heightAngle = 2 * M_PI / 6;
