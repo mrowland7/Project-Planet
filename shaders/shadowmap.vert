@@ -1,5 +1,4 @@
 #version 330 core
-//    // far plane = 11, near = 1
 
 out float depth;
 out vec4 pos_shadowSpace;

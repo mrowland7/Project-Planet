@@ -23,15 +23,15 @@ View::View(QWidget *parent) : QGLWidget(parent)
 
 
     m_sunCamera = new CamtransCamera();
-    m_sunCamera->orientLook(glm::vec4(0, 0, 2, 0),
-                            glm::vec4(0, 0, -2, 0),
-                            glm::vec4(0, 1, 0, 0));
-    m_sunCamera->setClip(.00001,10);
+//    m_sunCamera->orientLook(glm::vec4(0, 0, 2, 0),
+//                            glm::vec4(0, 0, -2, 0),
+//                            glm::vec4(0, 1, 0, 0));
+//    m_sunCamera->setClip(.00001,10);
     m_camera = new CamtransCamera();
-    m_camera->orientLook(glm::vec4(0, 0, 2, 0),
-                            glm::vec4(0, 0, -2, 0),
-                            glm::vec4(0, 1, 0, 0));
-    m_camera->setClip(.00001,10);
+//    m_camera->orientLook(glm::vec4(0, 0, 2, 0),
+//                            glm::vec4(0, 0, -2, 0),
+//                            glm::vec4(0, 1, 0, 0));
+//    m_camera->setClip(.00001,10);
 //    m_sunCamera->setHeightAngle(125);
     // mike test
 //    m_camera->orientLook(glm::vec4(0, 1, 2, 0),
@@ -43,6 +43,15 @@ View::View(QWidget *parent) : QGLWidget(parent)
 //    m_camera->orientLook(glm::vec4(0, 0, 2, 0),
 //                            glm::vec4(0, 0, -1, 0),
 //                            glm::vec4(0, 1, 0, 0));
+    m_sunCamera->orientLook(glm::vec4(0, 1, 2, 0),
+                                glm::vec4(0, -1, -2, 0),
+                                glm::vec4(0, 1, 0, 0));
+    m_camera->orientLook(glm::vec4(0, 1, 2, 0),
+                                glm::vec4(0, -1, -2, 0),
+                                glm::vec4(0, 1, 0, 0));
+    m_camera->orientLook(glm::vec4(2, 2, 4, 0),
+                                glm::vec4(-2, -2, -4, 0),
+                                glm::vec4(0, 1, 0, 0));
 }
 
 View::~View()
@@ -158,12 +167,12 @@ void View::initShadowmapBuffers() {
 void View::paintGL()
 {
     renderShadowmap();
-//    renderFinal();
+    renderFinal();
 }
 
 
 void View::renderShadowmap() {
-//    glBindFramebuffer(GL_FRAMEBUFFER, m_shadowmapFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_shadowmapFBO);
     renderFromCamera(m_sunCamera, m_shadowmapShader);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -199,17 +208,17 @@ void View::renderFromCamera(CamtransCamera* camera, GLuint shader) {
             glm::value_ptr(m_tree->getModel()));
 
 //    // TODO: instead of rendering square, do chunk rendering here
-//    glBindVertexArray(m_vaoID);
-//    glDrawArrays(GL_TRIANGLES, 0, 6);
-//    glDrawArrays(GL_TRIANGLES, 6, 6);
-//    glDrawArrays(GL_TRIANGLES, 12, 6);
-//    glBindVertexArray(0);
+    glBindVertexArray(m_vaoID);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDrawArrays(GL_TRIANGLES, 6, 6);
+    glDrawArrays(GL_TRIANGLES, 12, 6);
+    glBindVertexArray(0);
 
     //setLights
-    LightData ld = {0, glm::vec3(1,1,0),glm::vec3(m_camera->getPosition())};
-    this->setLight(ld);
+//    LightData ld = {0, glm::vec3(1,1,0),glm::vec3(m_camera->getPosition())};
+//    this->setLight(ld);
 
-    m_tree->draw(glm::vec3(), 0, 0, shader);
+//    m_tree->draw(glm::vec3(), 0, 0, shader);
 }
 
 void View::initSquare() {
