@@ -64,6 +64,9 @@ private:
     void keyReleaseEvent(QKeyEvent *event);
 
     void initSquare();
+    void initTextures();
+    void sendTextures(GLint shader);
+    GLuint loadTexture(const QString &path);
 
     ShapesScene* m_scene;
     CamtransCamera* m_camera;
@@ -73,6 +76,10 @@ private:
     GLuint m_shadowmapFBO;
     GLuint m_shadowmapColorAttachment;
     GLuint m_shadowmapDepthAttachment;
+    GLuint m_snowTex;
+    GLuint m_rockTex;
+    GLuint m_lavaTex;
+    GLuint m_dirtTex;
     // TODO: shouldn't have own vao, just for the sanity square
     GLuint m_vaoID;
     void setLight(const LightData &light);

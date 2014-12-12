@@ -94,8 +94,8 @@ void View::initializeGL()
     // TODO: init chunks here
     m_tree = new TerrainTree(m_shader, m_shadowmapShader);
 
-
     initShadowmapBuffers();
+    sendTextures(m_shader);
 }
 
 void View::initShaderInfo() {
@@ -135,6 +135,10 @@ void View::initShadowmapBuffers() {
 //    glDrawBuffer(0);
 
     glBindFramebuffer( GL_FRAMEBUFFER, 0);
+}
+
+void View::initTextures() {
+
 }
 
 void View::paintGL()
@@ -183,6 +187,10 @@ void View::renderFromCamera(CamtransCamera* camera, GLuint shader) {
     } else {
         glUniformMatrix4fv(glGetUniformLocation(m_shadowmapShader, "m"), 1, GL_FALSE,
                 glm::value_ptr(glm::mat4()));
+    }
+
+    if (shader == m_shader) {
+        sendTextures(shader);
     }
 
 //    // TODO: instead of rendering square, do chunk rendering here
@@ -373,6 +381,18 @@ void View::tick()
     }
 
     // TODO: Implement the demo update here
+    // position at time 0: y = 1, z = 2
+    // opposite position: y = -1, z = -2
+
+    // time 0 msec: cos = 1
+    // time 10,000 msec: cos = -1
+    // 10,000 -> pi: * pi/10000
+//    float timeMsec = time.currentTime().msec() + time.currentTime().second() * 1000;
+//    float piTime = timeMsec * (2 * 3.1415926 / 10000.0);
+//    float adjustTimeY = glm::cos(piTime);
+//    float adjustTimeZ = glm::sin(piTime);
+//    float newY = adjustTimeY * 2;
+//    float newZ = adjustTimeZ * 2;
 
     // TODO: check if there's a new section visible, if so, generate more terrain
 //    float newY = 1 + glm::sin(time.currentTime().second() * 1.0);
@@ -428,4 +448,74 @@ void View::setLight(const LightData &light)
 
     glUniform3f(glGetUniformLocation(m_shader, "lightColor"), light.color.x, light.color.y, light.color.z);
 
+}
+
+void View::sendTextures(GLint shader) {
+
+    glActiveTexture(GL_TEXTURE1);
+    std::string snowPath = "/course/cs123/data/image/terrain/snow.JPG";
+    GLuint snowTex = loadTexture(QString::fromStdString(snowPath));
+    GLint snowLoc = glGetUniformLocation(m_shader, "snowTexture");
+    glUniform1i(snowLoc, 1);
+    glBindTexture(GL_TEXTURE_2D, snowTex);
+
+    glActiveTexture(GL_TEXTURE2);
+    std::string rockPath = ":/shaders/venus.jpg";
+    GLuint rockTex = loadTexture(QString::fromStdString(rockPath));
+    GLint rockLoc = glGetUniformLocation(m_shader, "rockTexture");
+    glUniform1i(rockLoc, 2);
+    glBindTexture(GL_TEXTURE_2D, rockTex);
+
+    glActiveTexture(GL_TEXTURE3);
+    std::string lavaPath = ":/shaders/lava.png";
+    GLuint lavaTex = loadTexture(QString::fromStdString(lavaPath));
+    GLint lavaLoc = glGetUniformLocation(m_shader, "lavaTexture");
+    glUniform1i(lavaLoc, 3);
+    glBindTexture(GL_TEXTURE_2D, lavaTex);
+
+    glActiveTexture(GL_TEXTURE4);
+    std::string dirtPath = "/course/cs123/data/image/terrain/dirt.JPG";
+    GLuint dirtTex = loadTexture(QString::fromStdString(dirtPath));
+    GLint dirtLoc = glGetUniformLocation(m_shader, "dirtTexture");
+    glUniform1i(dirtLoc, 4);
+    glBindTexture(GL_TEXTURE_2D, dirtTex);
+
+
+    glActiveTexture(GL_TEXTURE0);
+}
+
+GLuint View::loadTexture(const QString &path)
+{
+    QImage texture;
+    QFile file(path);
+    if(!file.exists()) return -1;
+    texture.load(file.fileName());
+    texture = QGLWidget::convertToGLFormat(texture);
+
+    // Put your code here
+    GLuint id;
+    glGenTextures(1, &id);
+    glBindTexture(GL_TEXTURE_2D, id);
+
+    glTexImage2D(GL_TEXTURE_2D,
+                 0, //level
+                 GL_RGBA, // internal format
+                 texture.width(),
+                 texture.height(),
+                 0, // border... always 0
+                 GL_RGBA, // format
+                 GL_UNSIGNED_BYTE, // type of data,
+                 texture.bits() // pointer to image data
+                 );
+
+
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MIN_FILTER,
+                    GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MAG_FILTER,
+                    GL_LINEAR);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    return id; // Return something meaningful
 }

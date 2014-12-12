@@ -2,10 +2,13 @@
 out vec3 normalWorldSpace;
 out vec3 vertexToLight;
 out vec3 _lightColor;
-out vec2 _data;
 
 out vec4 pos_shadowSpace;
 out vec3 color;
+
+out vec2 coord;
+out float height;
+out float biome;
 
 
 // Transformation matrices
@@ -39,5 +42,8 @@ void main(){
 
     gl_Position = p * position_cameraSpace;
     color = objColor;
-    _data = data;
+
+    coord = texCoord;
+    height = data.x;
+    biome = data.y;
 }

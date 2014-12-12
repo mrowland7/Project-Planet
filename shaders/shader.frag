@@ -3,24 +3,54 @@
 in vec3 normalWorldSpace;
 in vec3 vertexToLight;
 in vec3 _lightColor;
-in vec3 _data;
+
+in vec2 coord; // terrain mapping coord
+in float height;
+in float biome; // first height, second biome
 
 in vec3 color;
 in vec4 pos_shadowSpace;
 uniform sampler2D tex;
 out vec4 fragColor;
 
-vec2 rotate(vec2 blah, float rads) {
-    float cr = cos(rads);
-    float sr = sin(rads);
-    return blah;
-//    return vec2(
-//                blah.x * cr - blah.y * sr,
-//                blah.x * sr + blah.y * cr
-//                );
+uniform sampler2D snowTexture;
+uniform sampler2D rockTexture;
+uniform sampler2D lavaTexture;
+uniform sampler2D dirtTexture;
+
+const vec2 lavaRange = vec2(-0.5, -0.25);
+const vec2 dirtRange = vec2(-0.3, -0.1);
+const vec2 rockRange = vec2(-0.25, 0.05);
+const vec2 snowRange = vec2(0.05, 0.17);
+
+float regionWeight(vec2 region) {
+    float regionDiff = region.y - region.x;
+    float weight = (regionDiff - (abs(height - region.y))) / regionDiff;
+    return max(0.0, weight);
+}
+vec4 sampleTextures()
+{
+    vec4 dirt = texture(dirtTexture, coord) * regionWeight(dirtRange);
+    vec4 lava = texture(lavaTexture, coord) * regionWeight(lavaRange);
+    vec4 rock = texture(rockTexture, coord) * regionWeight(rockRange);
+    vec4 snow = texture(snowTexture, coord) * regionWeight(snowRange);
+    return dirt + lava + rock + snow;// + vec4(0.5, 0.5, 0, 1);
+
+}
+vec2 rotate(vec2 blah)
+{
+    // internet says this is a RNG: http://stackoverflow.com/questions/12964279/
+    float randomish = 2 * 3.1415926535 * fract(sin(dot(gl_FragCoord.xy ,vec2(12.9898,78.233))) * 43758.5453);
+    float cr = cos(randomish);
+    float sr = sin(randomish);
+    return vec2(
+                blah.x * cr - blah.y * sr,
+                blah.x * sr + blah.y * cr
+                );
 }
 
-void main(){
+void main()
+{
     //LIGHTING
     // Add diffuse component
     vec3 ambient = color*.1f;
@@ -33,9 +63,9 @@ void main(){
     //float specIntensity = pow(max(0.0, dot(eyeDirection, lightReflection)), shininess);
     //color += max (vec3(0), lightColors[i] * specular_color * specIntensity);
 
-    vec3 realColor = ambient + diffuse;
-
-    //realColor.z = _data.y;
+    vec4 planetTexture = sampleTextures();
+    vec3 realColor = planetTexture.xyz + ambient;//color + ambient + diffuse;
+//    vec3 realColor = color + ambient + diffuse;
 
     float depthValUnadjusted = pos_shadowSpace.z / pos_shadowSpace.w;//11.0; // Z of the current object in sun-space
     float depthVal = (depthValUnadjusted - 0.999) * 1000; // hack hack hack
@@ -60,12 +90,12 @@ void main(){
         float visibility = 1.0;
         float sampleSpread = 1000;
         //four pseudo-random-rotated points, rotated more around a grid
-        float randomRotate = asin(gl_FragCoord.x);
+//        float randomRotate = asin(gl_FragCoord.x);
         vec2 rotatedSamples[4] = vec2[] (
-                rotate(vec2(-.8, .1), randomRotate) / sampleSpread,
-                rotate(vec2(-.2, -.8), randomRotate) / sampleSpread,
-                rotate(vec2(.25, .75), randomRotate) / sampleSpread,
-                rotate(vec2(.87, -.12), randomRotate) / sampleSpread
+                rotate(vec2(-.8, .1)) / sampleSpread,
+                rotate(vec2(-.2, -.8)) / sampleSpread,
+                rotate(vec2(.25, .75)) / sampleSpread,
+                rotate(vec2(.87, -.12)) / sampleSpread
                 );
         for (int i = 0; i < 4; i++) {
             float val = texture(tex, adj + rotatedSamples[i]).x;
@@ -84,6 +114,6 @@ void main(){
 //        fragColor = vec4(shadowVal, shadowVal, shadowVal, 1);
 //    }
     }
-    fragColor = vec4(realColor,1);
+
 }
 
