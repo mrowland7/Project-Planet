@@ -77,7 +77,6 @@ private:
     GLuint m_vaoID;
     void setLight(const LightData &light);
 
-
     TerrainTree *m_tree;
 
 private slots:

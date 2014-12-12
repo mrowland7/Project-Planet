@@ -4,7 +4,6 @@ in vec3 normalWorldSpace;
 in vec3 vertexToLight;
 in vec3 _lightColor;
 
-
 in vec3 color;
 in vec4 pos_shadowSpace;
 uniform sampler2D tex;
@@ -27,8 +26,7 @@ void main(){
     //float specIntensity = pow(max(0.0, dot(eyeDirection, lightReflection)), shininess);
     //color += max (vec3(0), lightColors[i] * specular_color * specIntensity);
 
-    fragColor = vec4(ambient+ diffuse,1 );
-
+    vec3 realColor = color + ambient + diffuse;
 
     float depthVal = pos_shadowSpace.z / pos_shadowSpace.w;//11.0; // Z of the current object in sun-space
     vec2 adj = vec2((pos_shadowSpace.x / pos_shadowSpace.w + 1) / 2,
@@ -48,17 +46,12 @@ void main(){
         fragColor = vec4(1, 1, 0 ,1);
     }
     else {
-        // in shadow
         float visibility = 1.0;
         if (diff > 0.01) {
-//            fragColor = vec4(0, 1, 0, 1);
+            // in shadow
             visibility = 0.5;
         }
-        // not in shadow
-//        else {
-//            fragColor = vec4(0, 0, 1, 1);
-//        }
-        fragColor = vec4(visibility * color, 1.0);
+        fragColor = vec4(visibility * realColor, 1.0);
 //        fragColor = vec4(depthVal, depthVal, depthVal, 1);
 //        fragColor = vec4(pos_shadowSpace.xyz, 1);
 //        fragColor = vec4(shadowVal, shadowVal, shadowVal, 1);

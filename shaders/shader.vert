@@ -15,6 +15,7 @@ in vec3 position; // Position of the vertex
 in vec3 normal;   // Normal of the vertex
 uniform mat4 mvp; // Modelview Projection matrix. This maps the vertices in model (object) space to world coordinates
 uniform mat4 shadow_mvp; // Modelview Projection matrix. This maps the vertices in model (object) space to world coordinates
+uniform vec3 objColor;
 
 //Light data
 uniform vec3 lightPosition;
@@ -32,9 +33,8 @@ void main(){
     normalWorldSpace = normalize(mat3(transpose(inverse(m))) * normal);
     _lightColor = lightColor;
 
-
-
     pos_shadowSpace = shadow_v * vec4(position, 1.0);
 
     gl_Position = p * position_cameraSpace;
+    color = objColor;
 }
