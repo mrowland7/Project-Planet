@@ -32,7 +32,7 @@ void Chunk::draw(GLint shader) {
 
 
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+//    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     glBindVertexArray(m_vaoID);
     for (int row = 0; row < VERTEX_GRID_WIDTH; row++){
@@ -87,7 +87,7 @@ void Chunk::drawRecursive(glm::vec3 cameraPos, int level, GLint shader) {
 }
 
 void Chunk::update(glm::vec3 cameraPos, int level) {
-    std::cout << level << std::endl;
+//    std::cout << level << std::endl;
 
     if(m_level +1 <= level && isInView(cameraPos, 0/*.01f*pow(.5,level)*/)) {
         glm::vec2 childSize = glm::vec2(1.f/(2*m_numChunksX), 1.f/(2*m_numChunksX));

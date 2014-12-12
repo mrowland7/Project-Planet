@@ -31,7 +31,6 @@ int TerrainTree::getLevel(glm::vec3 cameraPos){
     float dist = glm::length(cameraPos-getLoc())-getHeight();
     //int level = (int)(-log(dist/5.f)/log(2)); with height taking MAX_MOUNTAIN_HEIGHT into acount
     int level = (int)(-log(dist*m_root->VERTEX_GRID_WIDTH/256.f)/log(2));
-    std::cout << level << std::endl;
     return glm::clamp(1, level,20);
 }
 

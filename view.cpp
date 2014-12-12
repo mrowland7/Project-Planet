@@ -184,8 +184,12 @@ void View::renderFromCamera(CamtransCamera* camera, GLuint shader) {
                 glm::value_ptr(glm::mat4()));
     }
 
+//    if (shader == m_shader) {
+//        sendTextures(shader);
+//    }
     if (shader == m_shader) {
-        sendTextures(shader);
+        sendTexturesRender();
+
     }
 
 //    // TODO: instead of rendering square, do chunk rendering here
@@ -204,7 +208,8 @@ void View::renderFromCamera(CamtransCamera* camera, GLuint shader) {
     m_tree->draw(glm::vec3(m_camera->getPosition()), shader);
 }
 
-void View::initSquare() {
+void View::initSquare()
+{
     GLuint vertexLocation1 = glGetAttribLocation(m_shader, "position");
     GLuint vertexLocation2 = glGetAttribLocation(m_shadowmapShader, "position");
 
@@ -453,6 +458,7 @@ void View::sendTextures(GLint shader) {
     GLint snowLoc = glGetUniformLocation(m_shader, "snowTexture");
     glUniform1i(snowLoc, 1);
     glBindTexture(GL_TEXTURE_2D, snowTex);
+    m_snowTex = snowTex;
 
     glActiveTexture(GL_TEXTURE2);
     std::string rockPath = ":/shaders/venus.jpg";
@@ -460,6 +466,7 @@ void View::sendTextures(GLint shader) {
     GLint rockLoc = glGetUniformLocation(m_shader, "rockTexture");
     glUniform1i(rockLoc, 2);
     glBindTexture(GL_TEXTURE_2D, rockTex);
+    m_rockTex = rockTex;
 
     glActiveTexture(GL_TEXTURE3);
     std::string lavaPath = ":/shaders/lava.png";
@@ -467,6 +474,7 @@ void View::sendTextures(GLint shader) {
     GLint lavaLoc = glGetUniformLocation(m_shader, "lavaTexture");
     glUniform1i(lavaLoc, 3);
     glBindTexture(GL_TEXTURE_2D, lavaTex);
+    m_lavaTex = lavaTex;
 
     glActiveTexture(GL_TEXTURE4);
     std::string dirtPath = "/course/cs123/data/image/terrain/dirt.JPG";
@@ -474,9 +482,35 @@ void View::sendTextures(GLint shader) {
     GLint dirtLoc = glGetUniformLocation(m_shader, "dirtTexture");
     glUniform1i(dirtLoc, 4);
     glBindTexture(GL_TEXTURE_2D, dirtTex);
-
+    m_dirtTex = dirtTex;
 
     glActiveTexture(GL_TEXTURE0);
+}
+
+void View::sendTexturesRender()
+{
+    glActiveTexture(GL_TEXTURE1);
+    GLint snowLoc = glGetUniformLocation(m_shader, "snowTexture");
+    glUniform1i(snowLoc, 1);
+    glBindTexture(GL_TEXTURE_2D, m_snowTex);
+
+    glActiveTexture(GL_TEXTURE2);
+    GLint rockLoc = glGetUniformLocation(m_shader, "rockTexture");
+    glUniform1i(rockLoc, 2);
+    glBindTexture(GL_TEXTURE_2D, m_rockTex);
+
+    glActiveTexture(GL_TEXTURE3);
+    GLint lavaLoc = glGetUniformLocation(m_shader, "lavaTexture");
+    glUniform1i(lavaLoc, 3);
+    glBindTexture(GL_TEXTURE_2D, m_lavaTex);
+
+    glActiveTexture(GL_TEXTURE4);
+    GLint dirtLoc = glGetUniformLocation(m_shader, "dirtTexture");
+    glUniform1i(dirtLoc, 4);
+    glBindTexture(GL_TEXTURE_2D, m_dirtTex);
+
+    glActiveTexture(GL_TEXTURE0);
+
 }
 
 GLuint View::loadTexture(const QString &path)

@@ -66,6 +66,7 @@ private:
     void initSquare();
     void initTextures();
     void sendTextures(GLint shader);
+    void sendTexturesRender();
     GLuint loadTexture(const QString &path);
 
     ShapesScene* m_scene;
