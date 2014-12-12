@@ -89,7 +89,6 @@ void View::initializeGL()
     // the default).
     glFrontFace(GL_CCW);
 
-
     initSquare();
     // TODO: init chunks here
     m_tree = new TerrainTree(m_shader, m_shadowmapShader);
@@ -135,10 +134,6 @@ void View::initShadowmapBuffers() {
 //    glDrawBuffer(0);
 
     glBindFramebuffer( GL_FRAMEBUFFER, 0);
-}
-
-void View::initTextures() {
-
 }
 
 void View::paintGL()
