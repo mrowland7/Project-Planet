@@ -19,16 +19,17 @@ public:
 
 
     //CONSTANTS
-    const int VERTEX_GRID_WIDTH = 64;//number squares in our vertex grid
+    const int VERTEX_GRID_WIDTH = 256;//number squares in our vertex grid
     const float MAX_MOUNTAIN_HEIGHT = .1f;
-    const float ROUGHNESS = .5;
-    const int MAX_DEPTH = 11;
-    const int DECAY = 2.5f;
+    const float ROUGHNESS = 1.f;
+    //const int MAX_DEPTH = 9;
+    const float DECAY = 2.1;
+    const float RADIUS = .5f;
 
     void draw(GLint shader);
-    void drawRecursive(glm::vec3 cameraPos, float thetaWidth, float thetaHeight, int m_level, GLint shader);
+    void drawRecursive(glm::vec3 cameraPos, int m_level, GLint shader);
 
-    void update(glm::vec3 cameraPos, float thetaWidth, float thetaHeight, int m_level);
+    void update(glm::vec3 cameraPos, int m_level);
 
     void generateRoot();
 
@@ -53,7 +54,9 @@ private:
     void populateVertices(glm::vec3 *verticesOut);
     void populateNormals(glm::vec3 *verticesIn, glm::vec3 *normalsOut);
     QList<glm::vec3*> getSurroundingVertices(const glm::vec2 &coordinate, glm::vec3 *vertices);
-    bool isVisible(glm::vec3 cameraPos, float thetaWidth, float thetaHeight);
+    bool isInView(glm::vec3 cameraLoc, float error);
+    bool isInView(glm::vec3 cameraLoc, glm::vec3 dir, float error);
+    glm::vec3 getPointOnSphere(glm::vec2 coord);
 
     GLuint m_vaoID;
     int m_level;

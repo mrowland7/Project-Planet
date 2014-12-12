@@ -3,22 +3,29 @@
 in vec3 normalWorldSpace;
 in vec3 vertexToLight;
 in vec3 _lightColor;
+in vec3 _data;
 
 in vec3 color;
 in vec4 pos_shadowSpace;
 uniform sampler2D tex;
 out vec4 fragColor;
 
+vec2 rotate(vec2 blah, float rads) {
+    float cr = cos(rads);
+    float sr = sin(rads);
+    return blah;
+//    return vec2(
+//                blah.x * cr - blah.y * sr,
+//                blah.x * sr + blah.y * cr
+//                );
+}
+
 void main(){
-
-    //MAX's CODE
-
     //LIGHTING
-    vec3 _color = vec3(1,1,1);
     // Add diffuse component
-    vec3 ambient = _color*.1f;
+    vec3 ambient = color*.1f;
     float diffuseIntensity = clamp(.9*dot(vertexToLight, normalWorldSpace),0,1);
-    vec3 diffuse = max(vec3(0), _lightColor * _color * diffuseIntensity);
+    vec3 diffuse = max(vec3(0), _lightColor * color * diffuseIntensity);
 
     // Add specular component
     //vec4 lightReflection = normalize(-reflect(vertexToLight, normal_cameraSpace));
@@ -26,9 +33,12 @@ void main(){
     //float specIntensity = pow(max(0.0, dot(eyeDirection, lightReflection)), shininess);
     //color += max (vec3(0), lightColors[i] * specular_color * specIntensity);
 
-    vec3 realColor = color + ambient + diffuse;
+    vec3 realColor = ambient + diffuse;
 
-    float depthVal = pos_shadowSpace.z / pos_shadowSpace.w;//11.0; // Z of the current object in sun-space
+    //realColor.z = _data.y;
+
+    float depthValUnadjusted = pos_shadowSpace.z / pos_shadowSpace.w;//11.0; // Z of the current object in sun-space
+    float depthVal = (depthValUnadjusted - 0.999) * 1000; // hack hack hack
     vec2 adj = vec2((pos_shadowSpace.x / pos_shadowSpace.w + 1) / 2,
                     (pos_shadowSpace.y / pos_shadowSpace.w + 1) / 2);
     float shadowVal = texture(tex, adj).x;
@@ -40,21 +50,40 @@ void main(){
             || adj.y <= 0 || adj.y >= 1) {
         fragColor = vec4(1, 0, 0 ,1);
     }
-    // Yellow: depth value bad
-    else if (depthVal < 0 || depthVal > 1
-             || shadowVal < 0 || shadowVal > 1) {
-        fragColor = vec4(1, 0, 1 ,1);
-    }
+
+//    // Yellow: depth value bad
+//    else if (depthVal < 0 || depthVal > 1
+//             || shadowVal < 0 || shadowVal > 1) {
+//        fragColor = vec4(1, 1, 0 ,1);
+//    }
     else {
         float visibility = 1.0;
-        if (diff > 0.01) {
-            // in shadow
-            visibility = 0.5;
+        float sampleSpread = 1000;
+        //four pseudo-random-rotated points, rotated more around a grid
+        float randomRotate = asin(gl_FragCoord.x);
+        vec2 rotatedSamples[4] = vec2[] (
+                rotate(vec2(-.8, .1), randomRotate) / sampleSpread,
+                rotate(vec2(-.2, -.8), randomRotate) / sampleSpread,
+                rotate(vec2(.25, .75), randomRotate) / sampleSpread,
+                rotate(vec2(.87, -.12), randomRotate) / sampleSpread
+                );
+        for (int i = 0; i < 4; i++) {
+            float val = texture(tex, adj + rotatedSamples[i]).x;
+            float diff2 = depthVal - val;
+            if (diff2 > 0.01) {
+                visibility = visibility - 0.15;
+            }
         }
+//        if (diff > 0.01) {
+//            // in shadow
+//            visibility = 0.5;
+//        }
         fragColor = vec4(visibility * realColor, 1.0);
 //        fragColor = vec4(depthVal, depthVal, depthVal, 1);
 //        fragColor = vec4(pos_shadowSpace.xyz, 1);
 //        fragColor = vec4(shadowVal, shadowVal, shadowVal, 1);
 //    }
     }
+    fragColor = vec4(realColor,1);
 }
+

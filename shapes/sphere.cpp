@@ -7,7 +7,7 @@ Sphere::Sphere(int stacks, int slices)
 {
     m_numVertices = 5;
     m_vertexData = NULL;
-    m_radius = .5;
+    m_radius = .01;
     m_numSlices = MAX(slices, 3);
     m_numStacks = MAX(stacks, 2);
 }

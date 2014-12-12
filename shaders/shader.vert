@@ -2,6 +2,7 @@
 out vec3 normalWorldSpace;
 out vec3 vertexToLight;
 out vec3 _lightColor;
+out vec2 _data;
 
 out vec4 pos_shadowSpace;
 out vec3 color;
@@ -25,7 +26,6 @@ uniform vec3 lightColor;
 uniform mat4 shadow_v; // Modelview Projection matrix. This maps the vertices in model (object) space to world coordinates
 
 void main(){
-    vec3 colorVal = vec3(1,1,1);
 
     vec4 position_cameraSpace = v * m * vec4(position, 1.0);
     //vec4 normal_cameraSpace = vec4(normalize(mat3(transpose(inverse(v * m))) * normal), 0);
@@ -39,4 +39,5 @@ void main(){
 
     gl_Position = p * position_cameraSpace;
     color = objColor;
+    _data = data;
 }
