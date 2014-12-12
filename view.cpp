@@ -279,6 +279,7 @@ void View::resizeGL(int w, int h)
     m_camera->setAspectRatio((float)w/h);
 
     glViewport(0, 0, w, h);
+    initShadowmapBuffers();
 }
 
 void View::mousePressEvent(QMouseEvent *event)

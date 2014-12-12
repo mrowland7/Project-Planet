@@ -42,6 +42,7 @@ vec4 sampleTextures()
 vec2 rotate(vec2 blah)
 {
     // internet says this is a RNG: http://stackoverflow.com/questions/12964279/
+    vec2 seed = vec2(gl_FragCoord.y/gl_FragCoord.w, gl_FragCoord.z/gl_FragCoord.x);
     float randomish = 2 * 3.1415926535 * fract(sin(dot(gl_FragCoord.yz ,vec2(12.9898,78.233))) * 43758.5453);
     float cr = cos(randomish);
     float sr = sin(randomish);
@@ -67,7 +68,6 @@ void main()
 
     vec4 planetTexture = sampleTextures();
     vec3 realColor = planetTexture.xyz + ambient + diffuse/3;//color + ambient + diffuse;
-//    vec3 realColor = color + ambient + diffuse;
 
     float depthValUnadjusted = pos_shadowSpace.z / pos_shadowSpace.w;//11.0; // Z of the current object in sun-space
     float depthVal = (depthValUnadjusted - 0.999) * 1000; // hack hack hack
@@ -82,19 +82,12 @@ void main()
             || adj.y <= 0 || adj.y >= 1) {
         fragColor = vec4(1, 0, 0 ,1);
     }
-
-//    // Yellow: depth value bad
-//    else if (depthVal < 0 || depthVal > 1
-//             || shadowVal < 0 || shadowVal > 1) {
-//        fragColor = vec4(1, 1, 0 ,1);
-//    }
     else {
         float visibility = 1.0;
         if (shadowsOn == 2) {
+            // do antialiasing- multisample the grid
             float sampleSpread =200;
             float dropPer = 0.15/2/2;
-            //four pseudo-random-rotated points, rotated more around a grid
-    //        float randomRotate = asin(gl_FragCoord.x);
             vec2 rotatedSamples[8] = vec2[] (
                     rotate(vec2(-.8, .1)) / sampleSpread,
                     rotate(vec2(-.2, -.8)) / sampleSpread,
