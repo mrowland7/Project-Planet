@@ -94,8 +94,8 @@ void View::initializeGL()
     // TODO: init chunks here
     m_tree = new TerrainTree(m_shader, m_shadowmapShader);
 
-
     initShadowmapBuffers();
+    sendTextures(m_shader);
 }
 
 void View::initShaderInfo() {
@@ -137,6 +137,10 @@ void View::initShadowmapBuffers() {
     glBindFramebuffer( GL_FRAMEBUFFER, 0);
 }
 
+void View::initTextures() {
+
+}
+
 void View::paintGL()
 {
     renderShadowmap();
@@ -152,6 +156,12 @@ void View::renderShadowmap() {
 
 void View::renderFinal() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glActiveTexture(GL_TEXTURE0);
+    glUniform1i(glGetUniformLocation(m_shader, "tex"), 0);
+    glBindTexture(GL_TEXTURE_2D, m_shadowmapColorAttachment);
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 
     renderFromCamera(m_camera, m_shader);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -441,12 +451,6 @@ void View::setLight(const LightData &light)
 }
 
 void View::sendTextures(GLint shader) {
-
-    glActiveTexture(GL_TEXTURE0);
-    glUniform1i(glGetUniformLocation(m_shader, "tex"), 0);
-    glBindTexture(GL_TEXTURE_2D, m_shadowmapColorAttachment);
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 
     glActiveTexture(GL_TEXTURE1);
     std::string snowPath = "/course/cs123/data/image/terrain/snow.JPG";
