@@ -13,6 +13,8 @@ uniform mat4 v;
 uniform mat4 m;
 in vec3 position; // Position of the vertex
 in vec3 normal;   // Normal of the vertex
+in vec2 texCoord;
+in vec2 data;
 uniform mat4 mvp; // Modelview Projection matrix. This maps the vertices in model (object) space to world coordinates
 uniform mat4 shadow_mvp; // Modelview Projection matrix. This maps the vertices in model (object) space to world coordinates
 uniform vec3 objColor;
