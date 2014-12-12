@@ -185,6 +185,8 @@ void View::renderFromCamera(CamtransCamera* camera, GLuint shader) {
                 glm::value_ptr(glm::mat4()));
     }
 
+//    sendTextures(shader);
+
 //    // TODO: instead of rendering square, do chunk rendering here
 //    glBindVertexArray(m_vaoID);
 //    glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -429,3 +431,70 @@ void View::setLight(const LightData &light)
     glUniform3f(glGetUniformLocation(m_shader, "lightColor"), light.color.x, light.color.y, light.color.z);
 
 }
+/*
+void View::sendTextures(GLint shader) {
+    std::string snowPath = "/course/cs123/data/image/terrain/snow.JPG";
+    std::string rockPath = "/course/cs123/data/image/terrain/rock.JPG";
+    std::string grassPath = "/course/cs123/data/image/terrain/grass.JPG";
+    std::string dirtPath = "/course/cs123/data/image/terrain/dirt.JPG";
+    GLuint snowTex = loadTexture(QString::fromStdString(snowPath));
+    GLuint rockTex = loadTexture(QString::fromStdString(rockPath));
+    GLuint grassTex = loadTexture(QString::fromStdString(grassPath));
+    GLuint dirtTex = loadTexture(QString::fromStdString(dirtPath));
+
+    GLint snowLoc = glGetUniformLocation(m_shader, "snowTexture");
+    glUniform1i(snowLoc, 1);
+    GLint rockLoc = glGetUniformLocation(m_shader, "rockTexture");
+    glUniform1i(rockLoc, 2);
+    GLint grassLoc = glGetUniformLocation(m_shader, "grassTexture");
+    glUniform1i(grassLoc, 3);
+    GLint dirtLoc = glGetUniformLocation(m_shader, "dirtTexture");
+    glUniform1i(dirtLoc, 4);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, snowTex);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, rockTex);
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, grassTex);
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, dirtTex);
+
+}
+
+GLuint View::loadTexture(const QString &path)
+{
+    QImage texture;
+    QFile file(path);
+    if(!file.exists()) return -1;
+    texture.load(file.fileName());
+    texture = QGLWidget::convertToGLFormat(texture);
+
+    // Put your code here
+    GLuint id;
+    glGenTextures(1, &id);
+    glBindTexture(GL_TEXTURE_2D, id);
+
+    glTexImage2D(GL_TEXTURE_2D,
+                 0, //level
+                 GL_RGBA, // internal format
+                 texture.width(),
+                 texture.height(),
+                 0, // border... always 0
+                 GL_RGBA, // format
+                 GL_UNSIGNED_BYTE, // type of data,
+                 texture.bits() // pointer to image data
+                 );
+
+
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MIN_FILTER,
+                    GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MAG_FILTER,
+                    GL_LINEAR);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    return id; // Return something meaningful
+}
+*/
