@@ -251,8 +251,8 @@ void Chunk::subdivideSquareDiamond1(glm::vec2 topleft, glm::vec2 botright){
     float currGridWidth =  VERTEX_GRID_WIDTH/(botright.x - topleft.x);
     int globalDepth = 1+log(currGridWidth*m_numChunksX)/log(2);
 
-    m_heightData[getIndex(MM)] = std::min(MAX_MOUNTAIN_HEIGHT,
-                                          ((hTL + hTR + hBL + hBR)*.25f) + getPerturb(globalDepth));
+    m_heightData[getIndex(MM)] = glm::clamp(((hTL + hTR + hBL + hBR)*.25f) + getPerturb(globalDepth),
+                                            -MAX_MOUNTAIN_HEIGHT, MAX_MOUNTAIN_HEIGHT);
 }
 
 void Chunk::subdivideSquareDiamond2(glm::vec2 topleft, glm::vec2 botright){
@@ -291,22 +291,37 @@ void Chunk::subdivideSquareDiamond2(glm::vec2 topleft, glm::vec2 botright){
     float hBBM = getIndex(BBM) != -1 ? m_heightData[getIndex(BBM)] : (hBL + hMM + hBR)/3.f;
     float hMRR = getIndex(MRR) != -1 ? m_heightData[getIndex(MRR)] : (hTR + hMM + hBR)/3.f;
 
-    //wrapping
 
 
 
     float currGridWidth =  VERTEX_GRID_WIDTH/(botright.x - topleft.x);
     int globalDepth = 1+log(currGridWidth*m_numChunksX)/log(2);
 
-    m_heightData[getIndex(TM)] = std::min(MAX_MOUNTAIN_HEIGHT,
-                                          (hTL + hTR + hMM + hTTM)*.25f + getPerturb(globalDepth));
-    m_heightData[getIndex(MR)] = std::min(MAX_MOUNTAIN_HEIGHT,
-                                          (hTR + hBR + hMM + hMRR)*.25f + getPerturb(globalDepth));
-    m_heightData[getIndex(BM)] = std::min(MAX_MOUNTAIN_HEIGHT,
-                                          (hBL + hBR + hMM + hBBM)*.25f + getPerturb(globalDepth));
-    m_heightData[getIndex(ML)] = std::min(MAX_MOUNTAIN_HEIGHT,
-                                          (hTL + hBL + hMM + hMLL)*.25f + getPerturb(globalDepth));
+    m_heightData[getIndex(TM)] = glm::clamp((hTL + hTR + hMM + hTTM)*.25f + getPerturb(globalDepth),
+                                            -MAX_MOUNTAIN_HEIGHT, MAX_MOUNTAIN_HEIGHT);
+    m_heightData[getIndex(MR)] = glm::clamp((hTR + hBR + hMM + hMRR)*.25f + getPerturb(globalDepth),
+                                            -MAX_MOUNTAIN_HEIGHT, MAX_MOUNTAIN_HEIGHT);
+    m_heightData[getIndex(BM)] = glm::clamp((hBL + hBR + hMM + hBBM)*.25f + getPerturb(globalDepth),
+                                            -MAX_MOUNTAIN_HEIGHT, MAX_MOUNTAIN_HEIGHT);
+    m_heightData[getIndex(ML)] = glm::clamp((hTL + hBL + hMM + hMLL)*.25f + getPerturb(globalDepth),
+                                          -MAX_MOUNTAIN_HEIGHT, MAX_MOUNTAIN_HEIGHT);
 
+    float thing = (hTL + hTR + hMM + hTTM)*.25f + getPerturb(globalDepth);
+    float wtf = std::min(thing, MAX_MOUNTAIN_HEIGHT);
+    if(wtf > .1) {
+
+        int debug = 4;
+
+        int asdfasdf = 12312;
+
+
+
+        float val = .1;
+        val = (float)std::min(val, .01f);
+        int blayh = val;
+    }
+
+    //wrapping
     if(botright.x >= VERTEX_GRID_WIDTH) {
         float otherside = m_heightData[getIndex(0,(int)MRR.y)];
         m_heightData[getIndex(MR)] = otherside;
@@ -528,7 +543,7 @@ void Chunk::populateVertices(glm::vec3 *verticesOut) {
 
             glm::vec3 n = glm::normalize(p);
 
-            float displacement = m_heightData[getIndex(j,i)]; //???????????
+            float displacement = m_heightData[getIndex(j,i)];
             p = p + n*displacement;
             verticesOut[getIndex(j,i)] = p;
 

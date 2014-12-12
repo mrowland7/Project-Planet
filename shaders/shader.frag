@@ -16,8 +16,8 @@ void main(){
     //LIGHTING
     vec3 _color = vec3(1,1,1);
     // Add diffuse component
-    vec3 ambient = _color*.2f;
-    float diffuseIntensity = clamp(.7*dot(vertexToLight, normalWorldSpace),0,1);
+    vec3 ambient = _color*.1f;
+    float diffuseIntensity = clamp(.9*dot(vertexToLight, normalWorldSpace),0,1);
     vec3 diffuse = max(vec3(0), _lightColor * _color * diffuseIntensity);
 
     // Add specular component
@@ -43,7 +43,7 @@ void main(){
     // Yellow: depth value bad
     else if (depthVal < 0 || depthVal > 1
              || shadowVal < 0 || shadowVal > 1) {
-        fragColor = vec4(1, 1, 0 ,1);
+        fragColor = vec4(1, 0, 1 ,1);
     }
     else {
         float visibility = 1.0;
