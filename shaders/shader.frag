@@ -9,14 +9,15 @@ in vec4 pos_shadowSpace;
 uniform sampler2D tex;
 out vec4 fragColor;
 
-vec2 rotate(vec2 blah, float rads) {
-    float cr = cos(rads);
-    float sr = sin(rads);
-    return blah;
-//    return vec2(
-//                blah.x * cr - blah.y * sr,
-//                blah.x * sr + blah.y * cr
-//                );
+vec2 rotate(vec2 blah) {
+    // internet says this is a RNG: http://stackoverflow.com/questions/12964279/
+    float randomish = 2 * 3.1415926535 * fract(sin(dot(gl_FragCoord.xy ,vec2(12.9898,78.233))) * 43758.5453);
+    float cr = cos(randomish);
+    float sr = sin(randomish);
+    return vec2(
+                blah.x * cr - blah.y * sr,
+                blah.x * sr + blah.y * cr
+                );
 }
 
 void main(){
@@ -57,12 +58,12 @@ void main(){
         float visibility = 1.0;
         float sampleSpread = 1000;
         //four pseudo-random-rotated points, rotated more around a grid
-        float randomRotate = asin(gl_FragCoord.x);
+//        float randomRotate = asin(gl_FragCoord.x);
         vec2 rotatedSamples[4] = vec2[] (
-                rotate(vec2(-.8, .1), randomRotate) / sampleSpread,
-                rotate(vec2(-.2, -.8), randomRotate) / sampleSpread,
-                rotate(vec2(.25, .75), randomRotate) / sampleSpread,
-                rotate(vec2(.87, -.12), randomRotate) / sampleSpread
+                rotate(vec2(-.8, .1)) / sampleSpread,
+                rotate(vec2(-.2, -.8)) / sampleSpread,
+                rotate(vec2(.25, .75)) / sampleSpread,
+                rotate(vec2(.87, -.12)) / sampleSpread
                 );
         for (int i = 0; i < 4; i++) {
             float val = texture(tex, adj + rotatedSamples[i]).x;
