@@ -114,6 +114,6 @@ void main()
 //        fragColor = vec4(shadowVal, shadowVal, shadowVal, 1);
 //    }
     }
-
+    fragColor = vec4(diffuse,1);
 }
 

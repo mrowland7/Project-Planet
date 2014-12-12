@@ -87,7 +87,6 @@ void Chunk::drawRecursive(glm::vec3 cameraPos, int level, GLint shader) {
 }
 
 void Chunk::update(glm::vec3 cameraPos, int level) {
-    std::cout << level << std::endl;
 
     if(m_level +1 <= level && isInView(cameraPos, 0/*.01f*pow(.5,level)*/)) {
         glm::vec2 childSize = glm::vec2(1.f/(2*m_numChunksX), 1.f/(2*m_numChunksX));
@@ -213,12 +212,12 @@ void Chunk::subdivideSquare(glm::vec2 topleft, glm::vec2 botright, int depth)
     float currGridWidth =  VERTEX_GRID_WIDTH/(botright.x - topleft.x);
     int globalDepth = 1+log(currGridWidth*m_numChunksX)/log(2);
 
-    m_heightData[getIndex(TM)] = (hTL + hTR)*.5f;// + .5*getPerturb(globalDepth);
-    m_heightData[getIndex(MR)] = (hTR + hBR)*.5f;// + .5*getPerturb(globalDepth);
-    m_heightData[getIndex(BM)] = (hBL + hBR)*.5f;// + .5*getPerturb(globalDepth);
-    m_heightData[getIndex(ML)] = (hTL + hBL)*.5f;// + .5*getPerturb(globalDepth);
+    m_heightData[getIndex(TM)] = (hTL + hTR)*.5f;
+    m_heightData[getIndex(MR)] = (hTR + hBR)*.5f;
+    m_heightData[getIndex(BM)] = (hBL + hBR)*.5f;
+    m_heightData[getIndex(ML)] = (hTL + hBL)*.5f;
     m_heightData[getIndex(MM)] = std::min(MAX_MOUNTAIN_HEIGHT,
-                                          ((hTL + hTR + hBL + hBR)*.25f) + getPerturb(globalDepth));
+                                          ((hTL + hTR + hBL + hBR)*.25f) + getPerturb(globalDepth, topleft.y));
 
     subdivideSquare(TL, MM, depth-1);
     subdivideSquare(ML, BM, depth-1);
@@ -275,7 +274,7 @@ void Chunk::subdivideSquareDiamond1(glm::vec2 topleft, glm::vec2 botright){
     float currGridWidth =  VERTEX_GRID_WIDTH/(botright.x - topleft.x);
     int globalDepth = 1+log(currGridWidth*m_numChunksX)/log(2);
 
-    m_heightData[getIndex(MM)] = glm::clamp(((hTL + hTR + hBL + hBR)*.25f) + getPerturb(globalDepth),
+    m_heightData[getIndex(MM)] = glm::clamp(((hTL + hTR + hBL + hBR)*.25f) + getPerturb(globalDepth, topleft.y),
                                             -MAX_MOUNTAIN_HEIGHT, MAX_MOUNTAIN_HEIGHT);
 }
 
@@ -321,29 +320,14 @@ void Chunk::subdivideSquareDiamond2(glm::vec2 topleft, glm::vec2 botright){
     float currGridWidth =  VERTEX_GRID_WIDTH/(botright.x - topleft.x);
     int globalDepth = 1+log(currGridWidth*m_numChunksX)/log(2);
 
-    m_heightData[getIndex(TM)] = glm::clamp((hTL + hTR + hMM + hTTM)*.25f + getPerturb(globalDepth),
+    m_heightData[getIndex(TM)] = glm::clamp((hTL + hTR + hMM + hTTM)*.25f + getPerturb(globalDepth, topleft.y),
                                             -MAX_MOUNTAIN_HEIGHT, MAX_MOUNTAIN_HEIGHT);
-    m_heightData[getIndex(MR)] = glm::clamp((hTR + hBR + hMM + hMRR)*.25f + getPerturb(globalDepth),
+    m_heightData[getIndex(MR)] = glm::clamp((hTR + hBR + hMM + hMRR)*.25f + getPerturb(globalDepth, topleft.y),
                                             -MAX_MOUNTAIN_HEIGHT, MAX_MOUNTAIN_HEIGHT);
-    m_heightData[getIndex(BM)] = glm::clamp((hBL + hBR + hMM + hBBM)*.25f + getPerturb(globalDepth),
+    m_heightData[getIndex(BM)] = glm::clamp((hBL + hBR + hMM + hBBM)*.25f + getPerturb(globalDepth, topleft.y),
                                             -MAX_MOUNTAIN_HEIGHT, MAX_MOUNTAIN_HEIGHT);
-    m_heightData[getIndex(ML)] = glm::clamp((hTL + hBL + hMM + hMLL)*.25f + getPerturb(globalDepth),
+    m_heightData[getIndex(ML)] = glm::clamp((hTL + hBL + hMM + hMLL)*.25f + getPerturb(globalDepth, topleft.y),
                                           -MAX_MOUNTAIN_HEIGHT, MAX_MOUNTAIN_HEIGHT);
-
-    float thing = (hTL + hTR + hMM + hTTM)*.25f + getPerturb(globalDepth);
-    float wtf = std::min(thing, MAX_MOUNTAIN_HEIGHT);
-    if(wtf > .1) {
-
-        int debug = 4;
-
-        int asdfasdf = 12312;
-
-
-
-        float val = .1;
-        val = (float)std::min(val, .01f);
-        int blayh = val;
-    }
 
     //wrapping
     if(botright.x >= VERTEX_GRID_WIDTH) {
@@ -526,6 +510,12 @@ inline int Chunk::getIndex(int col, int row)
 }
 
 
+float Chunk::getPerturb(int cur_depth, float height) {
+    float scale = glm::abs(height/VERTEX_GRID_WIDTH - .5f);
+    scale = 1.f - pow(scale, .5f);
+    return scale*getPerturb(cur_depth);
+}
+
 /**
  * Computes the amount to perturb the height of the vertex currently being processed.
  * Feel free to modify this.
@@ -561,7 +551,7 @@ void Chunk::populateVertices(glm::vec3 *verticesOut) {
             glm::vec3 p = getPointOnSphere(glm::vec2(j,i));
             glm::vec3 n = glm::normalize(p);
 
-            float displacement = glm::max(0.03f, m_heightData[getIndex(j,i)]);
+            float displacement = glm::max(WATER_LEVEL, m_heightData[getIndex(j,i)]);
             p = p + n*displacement;
             verticesOut[getIndex(j,i)] = p;
 

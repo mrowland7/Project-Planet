@@ -21,10 +21,11 @@ public:
     //CONSTANTS
     const int VERTEX_GRID_WIDTH = 256;//number squares in our vertex grid
     const float MAX_MOUNTAIN_HEIGHT = .1f;
-    const float ROUGHNESS = 1.f;
+    const float ROUGHNESS = .5f;
     //const int MAX_DEPTH = 9;
     const float DECAY = 2.1;
     const float RADIUS = .5f;
+    const float WATER_LEVEL = 0.f;
 
     void draw(GLint shader);
     void drawRecursive(glm::vec3 cameraPos, int m_level, GLint shader);
@@ -50,6 +51,7 @@ private:
     int getIndex(const glm::vec2 &c);
     int getIndex(int col, int row);
     float getPerturb(int level);
+    float getPerturb(int level, float height);
     void initGL();
     void populateVertices(glm::vec3 *verticesOut);
     void populateNormals(glm::vec3 *verticesIn, glm::vec3 *normalsOut);
