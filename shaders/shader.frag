@@ -15,11 +15,11 @@ out vec4 fragColor;
 
 uniform sampler2D snowTexture;
 uniform sampler2D rockTexture;
-uniform sampler2D grassTexture;
+uniform sampler2D lavaTexture;
 uniform sampler2D dirtTexture;
 
-const vec2 dirtRange = vec2(-0.5, -0.28);
-const vec2 grassRange = vec2(-0.3, -0.1);
+const vec2 lavaRange = vec2(-0.5, -0.25);
+const vec2 dirtRange = vec2(-0.3, -0.1);
 const vec2 rockRange = vec2(-0.25, 0.05);
 const vec2 snowRange = vec2(0.05, 0.17);
 
@@ -31,10 +31,10 @@ float regionWeight(vec2 region) {
 vec4 sampleTextures()
 {
     vec4 dirt = texture(dirtTexture, coord) * regionWeight(dirtRange);
-    vec4 grass = texture(grassTexture, coord) * regionWeight(grassRange);
+    vec4 lava = texture(lavaTexture, coord) * regionWeight(lavaRange);
     vec4 rock = texture(rockTexture, coord) * regionWeight(rockRange);
     vec4 snow = texture(snowTexture, coord) * regionWeight(snowRange);
-    return dirt + grass + rock + snow;// + vec4(0.5, 0.5, 0, 1);
+    return dirt + lava + rock + snow;// + vec4(0.5, 0.5, 0, 1);
 
 }
 vec2 rotate(vec2 blah)

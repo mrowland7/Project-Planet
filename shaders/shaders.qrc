@@ -4,5 +4,7 @@
         <file>shader.vert</file>
         <file>shadowmap.frag</file>
         <file>shadowmap.vert</file>
+        <file>venus.jpg</file>
+        <file>lava.png</file>
     </qresource>
 </RCC>

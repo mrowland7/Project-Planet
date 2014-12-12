@@ -371,6 +371,18 @@ void View::tick()
     }
 
     // TODO: Implement the demo update here
+    // position at time 0: y = 1, z = 2
+    // opposite position: y = -1, z = -2
+
+    // time 0 msec: cos = 1
+    // time 10,000 msec: cos = -1
+    // 10,000 -> pi: * pi/10000
+//    float timeMsec = time.currentTime().msec() + time.currentTime().second() * 1000;
+//    float piTime = timeMsec * (2 * 3.1415926 / 10000.0);
+//    float adjustTimeY = glm::cos(piTime);
+//    float adjustTimeZ = glm::sin(piTime);
+//    float newY = adjustTimeY * 2;
+//    float newZ = adjustTimeZ * 2;
 
     // TODO: check if there's a new section visible, if so, generate more terrain
 //    float newY = 1 + glm::sin(time.currentTime().second() * 1.0);
@@ -444,18 +456,18 @@ void View::sendTextures(GLint shader) {
     glBindTexture(GL_TEXTURE_2D, snowTex);
 
     glActiveTexture(GL_TEXTURE2);
-    std::string rockPath = "/course/cs123/data/image/terrain/rock.JPG";
+    std::string rockPath = ":/shaders/venus.jpg";
     GLuint rockTex = loadTexture(QString::fromStdString(rockPath));
     GLint rockLoc = glGetUniformLocation(m_shader, "rockTexture");
     glUniform1i(rockLoc, 2);
     glBindTexture(GL_TEXTURE_2D, rockTex);
 
     glActiveTexture(GL_TEXTURE3);
-    std::string grassPath = "/course/cs123/data/image/terrain/grass.JPG";
-    GLuint grassTex = loadTexture(QString::fromStdString(grassPath));
-    GLint grassLoc = glGetUniformLocation(m_shader, "grassTexture");
-    glUniform1i(grassLoc, 3);
-    glBindTexture(GL_TEXTURE_2D, grassTex);
+    std::string lavaPath = ":/shaders/lava.png";
+    GLuint lavaTex = loadTexture(QString::fromStdString(lavaPath));
+    GLint lavaLoc = glGetUniformLocation(m_shader, "lavaTexture");
+    glUniform1i(lavaLoc, 3);
+    glBindTexture(GL_TEXTURE_2D, lavaTex);
 
     glActiveTexture(GL_TEXTURE4);
     std::string dirtPath = "/course/cs123/data/image/terrain/dirt.JPG";
