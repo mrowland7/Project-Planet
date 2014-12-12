@@ -40,17 +40,32 @@ void main(){
             || adj.y <= 0 || adj.y >= 1) {
         fragColor = vec4(1, 0, 0 ,1);
     }
-    // Yellow: depth value bad
-    else if (depthVal < 0 || depthVal > 1
-             || shadowVal < 0 || shadowVal > 1) {
-        fragColor = vec4(1, 1, 0 ,1);
-    }
+//    // Yellow: depth value bad
+//    else if (depthVal < 0 || depthVal > 1
+//             || shadowVal < 0 || shadowVal > 1) {
+//        fragColor = vec4(1, 1, 0 ,1);
+//    }
     else {
         float visibility = 1.0;
-        if (diff > 0.01) {
-            // in shadow
-            visibility = 0.5;
+        float sampleSpread = 1000;
+        //pseudo-rotated grid
+        vec2 rotatedSamples[4] = vec2[] (
+                vec2(-.8, .1) / sampleSpread,
+                vec2(-.2, -.8) / sampleSpread,
+                vec2(.25, .75) / sampleSpread,
+                vec2(.87, -.12) / sampleSpread
+                );
+        for (int i = 0; i < 4; i++) {
+            float val = texture(tex, adj + rotatedSamples[i]).x;
+            float diff2 = depthVal - val;
+            if (diff2 > 0.01) {
+                visibility = visibility - 0.15;
+            }
         }
+//        if (diff > 0.01) {
+//            // in shadow
+//            visibility = 0.5;
+//        }
         fragColor = vec4(visibility * realColor, 1.0);
 //        fragColor = vec4(depthVal, depthVal, depthVal, 1);
 //        fragColor = vec4(pos_shadowSpace.xyz, 1);
