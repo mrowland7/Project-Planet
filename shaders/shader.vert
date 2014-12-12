@@ -4,9 +4,8 @@ out vec3 vertexToLight;
 out vec3 _lightColor;
 
 out vec4 pos_shadowSpace;
-out vec4 pos_modelSpace;
-
 out vec3 color;
+
 
 // Transformation matrices
 uniform mat4 p;
@@ -34,16 +33,8 @@ void main(){
     _lightColor = lightColor;
 
 
+
     pos_shadowSpace = shadow_v * vec4(position, 1.0);
-//    // go from [-1, 1] to [0,1]
-//    pos_shadowSpace = 0.5 * (pos_shadowSpace + vec4(1, 1, 1, 1));
-    pos_modelSpace = vec4(position, 0);
 
     gl_Position = p * position_cameraSpace;
-    //clamp(color, 0.0, 1.0) * allBlack;
-
-    //color = vec3(normal);
-
-
-
 }

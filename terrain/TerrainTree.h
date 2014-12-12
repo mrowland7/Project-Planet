@@ -9,10 +9,10 @@
 class TerrainTree
 {
 public:
-    TerrainTree(GLint shader);
+    TerrainTree(GLint shader, GLint shadowShader);
     ~TerrainTree();
     void update(glm::vec3 cameraPos, float thetaWidth, float thetaHeight);
-    void draw(glm::vec3 cameraPos, float thetaWidth, float thetaHeight);
+    void draw(glm::vec3 cameraPos, float thetaWidth, float thetaHeight, GLint shader);
 
     glm::mat4 getModel();
     void setModel(glm::mat4 model);

@@ -23,15 +23,24 @@ View::View(QWidget *parent) : QGLWidget(parent)
 
 
     m_sunCamera = new CamtransCamera();
-    m_sunCamera->orientLook(glm::vec4(0, 1, 4, 0),
-                            glm::vec4(0, -1, -4, 0),
+    m_sunCamera->orientLook(glm::vec4(0, 0, 2, 0),
+                            glm::vec4(0, 0, -2, 0),
                             glm::vec4(0, 1, 0, 0));
+    m_sunCamera->setClip(.00001,10);
     m_camera = new CamtransCamera();
     m_camera->orientLook(glm::vec4(2, 2, 0, 1),
                             glm::vec4(-2, -2, 0, 0),
                             glm::vec4(0, 1, 0, 0));
     m_camera->setClip(.00001,10);
     m_camera->setAspectRatio((float)width()/height());
+//    m_sunCamera->setHeightAngle(125);
+    // mike test
+//    m_camera->orientLook(glm::vec4(0, 1, 2, 0),
+//                            glm::vec4(0, -1, -2, 0),
+//                            glm::vec4(0, 1, 0, 0));
+//    m_camera->orientLook(glm::vec4(2, 2, 4, 0),
+//                            glm::vec4(-2, -2, -4, 0),
+//                            glm::vec4(0, 1, 0, 0));
 //    m_camera->orientLook(glm::vec4(0, 0, 2, 0),
 //                            glm::vec4(0, 0, -1, 0),
 //                            glm::vec4(0, 1, 0, 0));
@@ -86,11 +95,9 @@ void View::initializeGL()
     glFrontFace(GL_CCW);
 
 
-
-    // TODO: init chunks here instead of square
     initSquare();
     // TODO: init chunks here
-    m_tree = new TerrainTree(m_shader);
+    m_tree = new TerrainTree(m_shader, m_shadowmapShader);
 
 
     initShadowmapBuffers();
@@ -132,6 +139,10 @@ void View::initShadowmapBuffers() {
     glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, width(), height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
     glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_shadowmapColorAttachment, 0);
 
+    glGenRenderbuffers( 1, &m_shadowmapDepthAttachment );
+    glBindRenderbuffer( GL_RENDERBUFFER, m_shadowmapDepthAttachment );
+    glRenderbufferStorage( GL_RENDERBUFFER, GL_DEPTH_COMPONENT32, width(), height() );
+    glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_shadowmapDepthAttachment );
 //    glActiveTexture( GL_TEXTURE0 );
 //    glGenTextures( 1, &m_shadowmapDepthAttachment );
 //    glBindTexture( GL_TEXTURE_2D, m_shadowmapDepthAttachment);
@@ -147,25 +158,19 @@ void View::initShadowmapBuffers() {
 
 void View::paintGL()
 {
-
-
-    glClearColor(0.05, 0.1, 0.2, 0);
     renderShadowmap();
-    renderFinal();
+//    renderFinal();
 }
 
 
 void View::renderShadowmap() {
-    glBindFramebuffer(GL_FRAMEBUFFER, m_shadowmapFBO);
+//    glBindFramebuffer(GL_FRAMEBUFFER, m_shadowmapFBO);
     renderFromCamera(m_sunCamera, m_shadowmapShader);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void View::renderFinal() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    // TODO: how to actually pass this?
-
 
     glActiveTexture(GL_TEXTURE0);
     glUniform1i(glGetUniformLocation(m_shader, "tex"), 0);
@@ -178,11 +183,10 @@ void View::renderFinal() {
 }
 
 void View::renderFromCamera(CamtransCamera* camera, GLuint shader) {
-    glClearColor(0, 0, 0, 0);
+    glUseProgram(shader);
+    glClearColor(0.05, 0.1, 0.2, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glUseProgram(shader);
-    glm::mat4 m4 = glm::mat4(1.0f);
     // TODO: bad bad bad bad bad
     glm::mat4x4 shadowV = m_sunCamera->getProjectionMatrix() * m_sunCamera->getViewMatrix();
     glUniformMatrix4fv(glGetUniformLocation(shader, "shadow_v"), 1, GL_FALSE, &shadowV[0][0]);
@@ -195,13 +199,19 @@ void View::renderFromCamera(CamtransCamera* camera, GLuint shader) {
     glUniformMatrix4fv(glGetUniformLocation(shader, "m"), 1, GL_FALSE,
             glm::value_ptr(m_tree->getModel()));
 
+//    // TODO: instead of rendering square, do chunk rendering here
+//    glBindVertexArray(m_vaoID);
+//    glDrawArrays(GL_TRIANGLES, 0, 6);
+//    glDrawArrays(GL_TRIANGLES, 6, 6);
+//    glDrawArrays(GL_TRIANGLES, 12, 6);
+//    glBindVertexArray(0);
 
     //setLights
     LightData ld = {0, glm::vec3(1,1,1),glm::vec3(glm::vec3(1,1,1))};
     this->setLight(ld);
 
-    m_tree->update(glm::vec3(m_camera->getPosition()),0,0);
-    m_tree->draw(glm::vec3(m_camera->getPosition()), 0, 0);
+
+    m_tree->draw(glm::vec3(), 0, 0, shader);
 }
 
 void View::initSquare() {
@@ -216,13 +226,20 @@ void View::initSquare() {
        -0.5f, -0.5f, 0.0f,
         0.5f, -0.5f, 0.0f,
        -0.5f, 0.5f, 0.0f,
+        // Square 3
+        1.8f, 0.0f, -4.0f,
+        1.8f, 1.8f, -4.0f,
+        0.8f, 1.8f, -4.0f,
+        0.8f, 0.0f, -4.0f,
+        1.8f, 0.0f, -4.0f,
+        0.8f, 1.8f, -4.0f,
         // Square 2
         0.8f, -0.2f, -2.0f,
         0.8f, 0.8f, -2.0f,
        -0.2f, 0.8f, -2.0f,
        -0.2f, -0.2f, -2.0f,
         0.8f, -0.2f, -2.0f,
-       -0.2f, 0.8f, -2.0f
+       -0.2f, 0.8f, -2.0f,
     };
 
     glGenVertexArrays(1, &m_vaoID);
@@ -363,15 +380,21 @@ void View::tick()
 
     if(m_forward) {
         m_camera->translate(m_camera->getLook()*m_moveSpeed*seconds);
+        m_sunCamera->translate(m_sunCamera->getLook()*m_moveSpeed*seconds);
     }
     if(m_backward) {
         m_camera->translate(-m_camera->getLook()*m_moveSpeed*seconds);
+        m_sunCamera->translate(-m_sunCamera->getLook()*m_moveSpeed*seconds);
     }
 
     // TODO: Implement the demo update here
 
     // TODO: check if there's a new section visible, if so, generate more terrain
-
+//    float newY = 1 + glm::sin(time.currentTime().second() * 1.0);
+//    float newZ = 2 + glm::sin(time.currentTime().second() * 1.0);
+//    m_sunCamera->orientLook(glm::vec4(0, newY, newZ, 0),
+//                            glm::vec4(0, 0 - newY, 0 - newZ, 0),
+//                            glm::vec4(0, 1, 0, 0));
 
     // Flag this view for repainting (Qt will call paintGL() soon after)
     update();

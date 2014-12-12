@@ -14,7 +14,7 @@ class Chunk
 public:
 
 
-    Chunk(int level, glm::vec2 planePos, int numChunksX, GLint shader);
+    Chunk(int level, glm::vec2 planePos, int numChunksX, GLint shader, GLint shadowShader);
     ~Chunk();
 
 
@@ -25,8 +25,8 @@ public:
     const int MAX_DEPTH = 11;
     const int DECAY = 2.f;
 
-    void draw();
-    void drawRecursive(glm::vec3 cameraPos, float thetaWidth, float thetaHeight, int m_level);
+    void draw(GLint shader);
+    void drawRecursive(glm::vec3 cameraPos, float thetaWidth, float thetaHeight, int m_level, GLint shader);
 
     void update(glm::vec3 cameraPos, float thetaWidth, float thetaHeight, int m_level);
 
@@ -70,6 +70,7 @@ private:
     Chunk *m_children[4]; //four, more detailed, children
 
     GLint m_shader;
+    GLint m_shadowShader;
 
     void drawNormals(glm::vec3 * vertices, glm::vec3 *normals);
 

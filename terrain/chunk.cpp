@@ -1,7 +1,7 @@
 #include "chunk.h"
 
 
-Chunk::Chunk(int level, glm::vec2 planePos, int numChunksX, GLint shader)
+Chunk::Chunk(int level, glm::vec2 planePos, int numChunksX, GLint shader, GLint shadowShader)
 {
 
     m_level = level;
@@ -14,6 +14,7 @@ Chunk::Chunk(int level, glm::vec2 planePos, int numChunksX, GLint shader)
     m_heightData = 0;
     m_biomeData = 0;
     m_shader = shader;
+    m_shadowShader = m_shadowShader;
 
 
 
@@ -30,8 +31,8 @@ Chunk::~Chunk() {
 }
 
 
-void Chunk::draw() {
-    glUseProgram(m_shader);
+void Chunk::draw(GLint shader) {
+    glUseProgram(shader);
 
     glBindVertexArray(m_vaoID);
     for (int row = 0; row < VERTEX_GRID_WIDTH; row++){
@@ -53,7 +54,7 @@ void Chunk::draw() {
 
 }
 
-void Chunk::drawRecursive(glm::vec3 cameraPos, float thetaWidth, float thetaHeight, int level) {\
+void Chunk::drawRecursive(glm::vec3 cameraPos, float thetaWidth, float thetaHeight, int level, GLint shader) {\
 
     bool allChildrenExist = m_children[0] != 0 && m_children[1] != 0
             && m_children[2] != 0 && m_children[3] != 0;
@@ -64,12 +65,12 @@ void Chunk::drawRecursive(glm::vec3 cameraPos, float thetaWidth, float thetaHeig
     }
 
     if(!allChildrenExist || m_level == level ) {
-        draw();
+        draw(shader);
         return;
     }
 
     for(int i = 0; i < 4; i++) {
-        m_children[i]->drawRecursive(cameraPos, thetaWidth, thetaHeight, level);
+        m_children[i]->drawRecursive(cameraPos, thetaWidth, thetaHeight, level, shader);
     }
 
 }
@@ -83,8 +84,10 @@ void Chunk::update(glm::vec3 cameraPos, float thetaWidth, float thetaHeight, int
                 int quadY = i/2;
                 glm::vec2 quadOffset = glm::vec2(quadX, quadY);
                 glm::vec2 childPlanePos = quadOffset*childSize + m_planePos;
-                m_children[i] = new Chunk(m_level + 1,  childPlanePos, 2*m_numChunksX, m_shader);
-                m_children[i]->generate(m_heightData, m_biomeData, i);   
+
+                m_children[i] = new Chunk(m_level + 1,  childPlanePos, 2*m_numChunksX, m_shader, m_shadowShader);
+                m_children[i]->generate(m_heightData, m_biomeData, i);
+
             }
             m_children[i]->update(cameraPos, thetaWidth, thetaHeight, level);
         }

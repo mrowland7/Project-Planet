@@ -1,7 +1,7 @@
 #include "TerrainTree.h"
 
-TerrainTree::TerrainTree(GLint shader) {
-    m_root = new Chunk(1, glm::vec2(0,0), 1, shader);
+TerrainTree::TerrainTree(GLint shader, GLint shadowShader) {
+    m_root = new Chunk(1, glm::vec2(0,0), 1, shader, shadowShader);
     m_root->generateRoot();
     m_model = glm::mat4();
 
@@ -18,13 +18,9 @@ void TerrainTree::update(glm::vec3 cameraPos, float thetaWidth, float thetaHeigh
 
 }
 
-void TerrainTree::draw(glm::vec3 cameraPos, float thetaWidth, float thetaHeight) {
-
-
+void TerrainTree::draw(glm::vec3 cameraPos, float thetaWidth, float thetaHeight, GLint shader) {
     int level = getLevel(cameraPos, thetaWidth, thetaHeight);
-    m_root->drawRecursive(cameraPos, thetaWidth, thetaHeight, level);
-
-
+    m_root->drawRecursive(cameraPos, thetaWidth, thetaHeight, level, shader);
 
 }
 
