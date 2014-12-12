@@ -64,8 +64,6 @@ private:
     void keyReleaseEvent(QKeyEvent *event);
 
     void initSquare();
-    void sendTextures(GLint shader);
-    GLuint loadTexture(const QString &path);
 
     ShapesScene* m_scene;
     CamtransCamera* m_camera;

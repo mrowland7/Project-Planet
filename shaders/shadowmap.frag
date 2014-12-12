@@ -14,6 +14,6 @@ void main(){
 //    fragColor = vec4(depth2, depth2, depth2, 1.0);
 //    fragColor = vec4(depth, depth, depth, 1.0);
 //    fragColor = vec4(depth3, depth3, depth3, 1.0);
-//    fragColor = vec4(depth4, depth4, depth4, 1.0);
-    fragColor = vec4(1, 0, 0, 1.0);
+    fragColor = vec4(depth4, depth4, depth4, 1.0);
+//    fragColor = vec4(1, 0, 0, 1.0);
 }
