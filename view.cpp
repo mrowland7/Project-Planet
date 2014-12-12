@@ -27,10 +27,11 @@ View::View(QWidget *parent) : QGLWidget(parent)
                             glm::vec4(0, -1, -4, 0),
                             glm::vec4(0, 1, 0, 0));
     m_camera = new CamtransCamera();
-    m_camera->orientLook(glm::vec4(0, 0, 2, 0),
-                            glm::vec4(0, 0, -2, 0),
+    m_camera->orientLook(glm::vec4(2, 2, 0, 1),
+                            glm::vec4(-2, -2, 0, 0),
                             glm::vec4(0, 1, 0, 0));
     m_camera->setClip(.00001,10);
+    m_camera->setAspectRatio((float)width()/height());
 //    m_camera->orientLook(glm::vec4(0, 0, 2, 0),
 //                            glm::vec4(0, 0, -1, 0),
 //                            glm::vec4(0, 1, 0, 0));
@@ -191,15 +192,16 @@ void View::renderFromCamera(CamtransCamera* camera, GLuint shader) {
             glm::value_ptr(camera->getProjectionMatrix()));
     glUniformMatrix4fv(glGetUniformLocation(shader, "v"), 1, GL_FALSE,
             glm::value_ptr(camera->getViewMatrix()));
-    glUniformMatrix4fv(m_uniformLocs["m"], 1, GL_FALSE,
+    glUniformMatrix4fv(glGetUniformLocation(shader, "m"), 1, GL_FALSE,
             glm::value_ptr(m_tree->getModel()));
 
 
     //setLights
-    LightData ld = {0, glm::vec3(1,1,0),glm::vec3(m_camera->getPosition())};
+    LightData ld = {0, glm::vec3(1,1,1),glm::vec3(glm::vec3(1,1,1))};
     this->setLight(ld);
 
-    m_tree->draw(glm::vec3(), 0, 0);
+    m_tree->update(glm::vec3(m_camera->getPosition()),0,0);
+    m_tree->draw(glm::vec3(m_camera->getPosition()), 0, 0);
 }
 
 void View::initSquare() {
@@ -253,19 +255,25 @@ void View::initSquare() {
 
 void View::resizeGL(int w, int h)
 {
+    m_camera->setAspectRatio((float)w/h);
+
     glViewport(0, 0, w, h);
 }
 
 void View::mousePressEvent(QMouseEvent *event)
 {
     m_prevMouseCoordinates = glm::vec2((float)event->x(), (float)event->y());
-    m_leftMouseDown = true;
+    if(event->buttons() == Qt::LeftButton)
+        m_leftMouseDown = true;
+    if(event->buttons() == Qt::RightButton)
+        m_rightMouseDown = true;
 }
 
 void View::mouseMoveEvent(QMouseEvent *event)
 {
+    glm::vec2 currMouseCoordinates = glm::vec2((float)event->x(), (float)event->y());
+
     if(m_leftMouseDown) {
-        glm::vec2 currMouseCoordinates = glm::vec2((float)event->x(), (float)event->y());
         glm::vec4 hit1;
         glm::vec4 hit2;
         glm::vec4 currRay = glm::vec4(getRayFromScreenCoord(currMouseCoordinates),0);
@@ -273,32 +281,45 @@ void View::mouseMoveEvent(QMouseEvent *event)
 
         if(intersectSphere(m_tree->getModel(), m_camera->getPosition(), currRay, hit2) &&
         intersectSphere(m_tree->getModel(), m_camera->getPosition(), prevRay, hit1)) {
-            glm::vec4 center = m_tree->getModel()*glm::vec4(0,0,0,1);
+            glm::vec4 center = glm::vec4(m_tree->getLoc(),1);
             glm::vec3 a = glm::vec3(hit1 - center);
             glm::vec3 b = glm::vec3(hit2 - center);
-            glm::vec3 axis = glm::normalize(glm::cross(b,a));
-            float angle = acos(glm::dot(a, b)/(glm::length(a)*glm::length(b)));
+            glm::vec3 axis = glm::normalize(glm::cross(a,b));
+            float angle = acos(glm::dot(a, b)/(glm::length(a)*glm::length(b))-.0001f); //avoid floating point errors...
 
 
             glm::mat4 mat1 = glm::translate(glm::mat4(), glm::vec3(-center));
             glm::mat4 mat2 = glm::rotate(glm::mat4(), angle, glm::vec3(axis));
             glm::mat4 mat3 = glm::translate(glm::mat4(), glm::vec3(center));
+            glm::vec4 eyePos = mat2*m_camera->getPosition();
+            //m_camera->orientLook(eyePos, -eyePos, m_camera->getUp()); //rotate camera instead of object
             m_tree->setModel(mat3*mat2*mat1*m_tree->getModel());
 
-
         }
+    }
+    if(m_rightMouseDown) {
+        glm::vec2 diffP = (currMouseCoordinates - m_prevMouseCoordinates);
+        glm::vec2 dimP = glm::vec2(width(), height());
+        float heightAngle = m_camera->getHeightAngle();
+        glm::vec2 dimA = glm::vec2(heightAngle, m_camera->getAspectRatio()*heightAngle);
+        glm::vec2 diff = (diffP/dimP)*dimA;
+        m_camera->rotateV(diff.x);
+        m_camera->rotateU(diff.y);
 
-
-    m_prevMouseCoordinates = currMouseCoordinates;
+        //set up vector when close to planet surface?
+        //glm::vec4 up = glm::normalize(m_camera->getPosition() - glm::vec4(0,0,0,1));
+        //m_camera->orientLook(m_camera->getPosition(), m_camera->getLook(), up);
     }
 
+    m_prevMouseCoordinates = currMouseCoordinates;
 
 
 }
 
 void View::mouseReleaseEvent(QMouseEvent *event)
 {
-    m_leftMouseDown = false;
+        m_leftMouseDown = false;
+        m_rightMouseDown = false;
 }
 
 void View::keyPressEvent(QKeyEvent *event)
@@ -326,7 +347,12 @@ void View::keyReleaseEvent(QKeyEvent *event)
 }
 
 void View::wheelEvent(QWheelEvent *event) {
+    QPoint angleDelta = event->angleDelta();
+    float scale = pow(.95, (float)angleDelta.y()/60.f);
+    float distToCenter = glm::length(m_camera->getPosition()-glm::vec4(m_tree->getLoc(),1));
+    float transDist = (1.f-scale) *(distToCenter -m_tree->getHeight());
 
+    m_camera->translate(m_camera->getLook()*transDist);
 
 }
 
@@ -374,13 +400,14 @@ glm::vec3 View::getRayFromScreenCoord(glm::vec2 mouse) {
 
     int x = (int)mouse.x;
     int y = (int) mouse.y;
+    float xN = (2.f*x)/width() - 1;
+    float yN = 1-(2.f*y)/height();
 
-    glm::vec4 pFilm = glm::vec4((2.f*x)/width() - 1, 1-(2.f*y)/height(), -1,  1);
-    glm::mat4x4 viewingTransform = glm::inverse(m_camera->getViewMatrix());
+    glm::vec4 pFilm = glm::vec4(xN, yN, -1,  1);
+    glm::mat4x4 viewingTransform = glm::inverse(m_camera->getScaleMatrix()*m_camera->getViewMatrix());
 
     glm::vec3 pWorld = glm::vec3(viewingTransform*pFilm);
 
-    glm::vec4 debug = m_camera->getPosition();
     glm::vec3 rayStart = glm::vec3(viewingTransform*glm::vec4(0, 0, 0, 1));
     return glm::normalize(pWorld - rayStart);
 

@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include "GL/glew.h"
 #include "QList"
+#include <iostream>
 
 //a chunk of terrain on the sphere (determined by radial cuts of the sphere)
 //represented by a square grid of vertex heights.
@@ -17,9 +18,12 @@ public:
     ~Chunk();
 
 
-    //number squares in our vertex grid
-    static const int VERTEX_GRID_WIDTH;
-    static const int VERTEX_GRID_HEIGHT;
+    //CONSTANTS
+    const int VERTEX_GRID_WIDTH = 1024;//number squares in our vertex grid
+    const float MAX_MOUNTAIN_HEIGHT = .1f;
+    const float ROUGHNESS = .8;
+    const int MAX_DEPTH = 11;
+    const int DECAY = 2.f;
 
     void draw();
     void drawRecursive(glm::vec3 cameraPos, float thetaWidth, float thetaHeight, int m_level);
@@ -35,15 +39,16 @@ public:
 
 
 private:
-    const float ROUGHNESS = .07;
-    const int MAX_DEPTH = 8;
-    const int DECAY = 1.5;
+
 
     void generate(float *parentHeightData, float *parentBiomeData, int quadrant);
     void subdivideSquare(glm::vec2 topleft, glm::vec2 botright, int depth);
+    void subdivideSquareDiamond(glm::vec2 topleft, glm::vec2 botright, int depth);
+    void subdivideSquareDiamond1(glm::vec2 topleft, glm::vec2 botright);
+    void subdivideSquareDiamond2(glm::vec2 topleft, glm::vec2 botright);
     int getIndex(const glm::vec2 &c);
     int getIndex(int col, int row);
-    double getPerturb(int level);
+    float getPerturb(int level);
     void initGL();
     void populateVertices(glm::vec3 *verticesOut);
     void populateNormals(glm::vec3 *verticesIn, glm::vec3 *normalsOut);

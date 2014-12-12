@@ -1,8 +1,12 @@
 #version 330 core
+out vec3 normalWorldSpace;
+out vec3 vertexToLight;
+out vec3 _lightColor;
 
-out vec3 color; // Computed color for this vertex
 out vec4 pos_shadowSpace;
 out vec4 pos_modelSpace;
+
+out vec3 color;
 
 // Transformation matrices
 uniform mat4 p;
@@ -25,24 +29,9 @@ void main(){
     //vec4 normal_cameraSpace = vec4(normalize(mat3(transpose(inverse(v * m))) * normal), 0);
 
     vec4 position_worldSpace = m * vec4(position, 1.0);
-    vec4 normal_worldSpace = vec4(normalize(mat3(transpose(inverse(m))) * normal), 0);
-
-    color = colorVal*.3;
-
-    //LIGHTING
-    vec4 vertexToLight = normalize(vec4(lightPosition,1) - position_worldSpace); //in world space
-
-    // Add diffuse component
-    float diffuseIntensity = clamp(.7*dot(vertexToLight, normal_worldSpace),0,1);
-    color += max(vec3(0), lightColor * colorVal * diffuseIntensity);
-
-    // Add specular component
-    //vec4 lightReflection = normalize(-reflect(vertexToLight, normal_cameraSpace));
-    //vec4 eyeDirection = normalize(vec4(0,0,0,1) - position_cameraSpace);
-    //float specIntensity = pow(max(0.0, dot(eyeDirection, lightReflection)), shininess);
-    //color += max (vec3(0), lightColors[i] * specular_color * specIntensity);
-
-
+    vertexToLight = normalize(lightPosition - vec3(position_worldSpace));
+    normalWorldSpace = normalize(mat3(transpose(inverse(m))) * normal);
+    _lightColor = lightColor;
 
 
     pos_shadowSpace = shadow_v * vec4(position, 1.0);

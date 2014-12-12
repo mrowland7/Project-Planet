@@ -22,15 +22,17 @@ void TerrainTree::draw(glm::vec3 cameraPos, float thetaWidth, float thetaHeight)
 
 
     int level = getLevel(cameraPos, thetaWidth, thetaHeight);
-    m_root->draw();
-    //m_root.drawRecursive(cameraPos, thetaWidth, thetaHeight, level);
+    m_root->drawRecursive(cameraPos, thetaWidth, thetaHeight, level);
 
 
 
 }
 
 int TerrainTree::getLevel(glm::vec3 cameraPos, float thetaWidth, float thetaHeight){
+    float dist = glm::length(cameraPos)-getHeight();
+    int level = (int)-log(dist/5.f)/log(2);
     return 1;
+    return glm::max(1, level);
 }
 
 glm::mat4 TerrainTree::getModel() {
@@ -39,4 +41,12 @@ glm::mat4 TerrainTree::getModel() {
 
 void TerrainTree::setModel(glm::mat4 model){
     m_model = model;
+}
+
+float TerrainTree::getHeight() {
+    return m_root->MAX_MOUNTAIN_HEIGHT + .5;
+}
+
+glm::vec3 TerrainTree::getLoc() {
+    return glm::vec3(m_model * glm::vec4(0,0,0,1));
 }

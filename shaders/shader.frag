@@ -1,5 +1,10 @@
 #version 330 core
 
+in vec3 normalWorldSpace;
+in vec3 vertexToLight;
+in vec3 _lightColor;
+
+
 in vec3 color;
 in vec4 pos_shadowSpace;
 in vec4 pos_modelSpace;
@@ -9,7 +14,21 @@ out vec4 fragColor;
 void main(){
 
     //MAX's CODE
-    fragColor = vec4(color,1 );
+
+    //LIGHTING
+    vec3 _color = vec3(1,1,1);
+    // Add diffuse component
+    vec3 ambient = _color*.2f;
+    float diffuseIntensity = clamp(.7*dot(vertexToLight, normalWorldSpace),0,1);
+    vec3 diffuse = max(vec3(0), _lightColor * _color * diffuseIntensity);
+
+    // Add specular component
+    //vec4 lightReflection = normalize(-reflect(vertexToLight, normal_cameraSpace));
+    //vec4 eyeDirection = normalize(vec4(0,0,0,1) - position_cameraSpace);
+    //float specIntensity = pow(max(0.0, dot(eyeDirection, lightReflection)), shininess);
+    //color += max (vec3(0), lightColors[i] * specular_color * specIntensity);
+
+    fragColor = vec4(ambient+ diffuse,1 );
 
 
 

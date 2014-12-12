@@ -16,11 +16,15 @@ public:
 
     glm::mat4 getModel();
     void setModel(glm::mat4 model);
+    float getHeight();
+    glm::vec3 getLoc();
+
 
 private:
     Chunk *m_root;
     int getLevel(glm::vec3 cameraPos, float thetaWidth, float thetaHeight);
     glm::mat4 m_model;
+
 };
 
 #endif // TERRAINTREE_H
