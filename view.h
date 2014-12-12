@@ -30,12 +30,20 @@ private:
     QTime time;
     QTimer timer;
 
+
+    //VIEWING
     const float m_moveSpeed = 1.f;
     bool m_forward = false;
     bool m_backward = false;
     glm::vec2 m_prevMouseCoordinates;
     bool m_leftMouseDown = false;
+    bool m_rightMouseDown = false;
+    glm::vec3 getRayFromScreenCoord(glm::vec2 mouse);
+    bool intersectSphere(const glm::mat4 &matrix, const glm::vec4 &origin, const glm::vec4 &ray, glm::vec4 &intersection);
+    float m_trackballRadius = .5f;
 
+
+    //GL
     void initializeGL();
     void paintGL();
     void resizeGL(int w, int h);
@@ -46,6 +54,7 @@ private:
     void initShaderInfo();
     void initShadowmapBuffers();
 
+    //EVENTS
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
@@ -68,9 +77,6 @@ private:
     GLuint m_vaoID;
     void setLight(const LightData &light);
 
-    glm::vec3 getRayFromScreenCoord(glm::vec2 mouse);
-    bool intersectSphere(const glm::mat4 &matrix, const glm::vec4 &origin, const glm::vec4 &ray, glm::vec4 &intersection);
-    float m_trackballRadius = 4.f;
 
     TerrainTree *m_tree;
 
