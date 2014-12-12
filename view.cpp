@@ -39,6 +39,8 @@ View::View(QWidget *parent) : QGLWidget(parent)
     m_camera->orientLook(glm::vec4(2, 2, 5, 0),
                                 glm::vec4(-2, -2, -5, 0),
                                 glm::vec4(0, 1, 0, 0));
+    m_shadowsOn = true;
+    m_showShadowmap = false;
 }
 
 View::~View()
@@ -139,12 +141,16 @@ void View::initShadowmapBuffers() {
 void View::paintGL()
 {
     renderShadowmap();
-    renderFinal();
+    if (!m_showShadowmap) {
+        renderFinal();
+    }
 }
 
 
 void View::renderShadowmap() {
-    glBindFramebuffer(GL_FRAMEBUFFER, m_shadowmapFBO);
+    if (!m_showShadowmap) {
+        glBindFramebuffer(GL_FRAMEBUFFER, m_shadowmapFBO);
+    }
     renderFromCamera(m_sunCamera, m_shadowmapShader);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -184,11 +190,10 @@ void View::renderFromCamera(CamtransCamera* camera, GLuint shader) {
                 glm::value_ptr(glm::mat4()));
     }
 
-//    if (shader == m_shader) {
-//        sendTextures(shader);
-//    }
     if (shader == m_shader) {
         sendTexturesRender();
+        glUniform1i(glGetUniformLocation(m_shader, "shadowsOn"),
+                    m_shadowsOn ? 2 : 1);
 
     }
 
@@ -356,6 +361,12 @@ void View::keyReleaseEvent(QKeyEvent *event)
     if(event->key() == Qt::Key_S) {
         m_backward = false;
     }
+    if(event->key() == Qt::Key_X) {
+        m_shadowsOn = !m_shadowsOn;
+    }
+    if(event->key() == Qt::Key_Z) {
+        m_showShadowmap = !m_showShadowmap;
+    }
 }
 
 void View::wheelEvent(QWheelEvent *event) {
@@ -384,22 +395,16 @@ void View::tick()
     // position at time 0: y = 1, z = 2
     // opposite position: y = -1, z = -2
 
-    // time 0 msec: cos = 1
-    // time 10,000 msec: cos = -1
-    // 10,000 -> pi: * pi/10000
-//    float timeMsec = time.currentTime().msec() + time.currentTime().second() * 1000;
-//    float piTime = timeMsec * (2 * 3.1415926 / 10000.0);
-//    float adjustTimeY = glm::cos(piTime);
-//    float adjustTimeZ = glm::sin(piTime);
-//    float newY = adjustTimeY * 2;
-//    float newZ = adjustTimeZ * 2;
+    float timeMsec = time.currentTime().msec() + time.currentTime().second() * 1000;
+    float piTime = timeMsec * (2 * 3.1415926 / 30000.0); // loop every two minutes?
+    float adjustTimeY = glm::cos(piTime);
+    float adjustTimeZ = glm::sin(piTime);
+    float newY = adjustTimeY * 2;
+    float newZ = adjustTimeZ * 2;
 
-    // TODO: check if there's a new section visible, if so, generate more terrain
-//    float newY = 1 + glm::sin(time.currentTime().second() * 1.0);
-//    float newZ = 2 + glm::sin(time.currentTime().second() * 1.0);
-//    m_sunCamera->orientLook(glm::vec4(0, newY, newZ, 0),
-//                            glm::vec4(0, 0 - newY, 0 - newZ, 0),
-//                            glm::vec4(0, 1, 0, 0));
+    m_sunCamera->orientLook(glm::vec4(0, newY, newZ, 0),
+                            glm::vec4(0, 0 - newY, 0 - newZ, 0),
+                            glm::vec4(0, 1, 0, 0));
 
     // Flag this view for repainting (Qt will call paintGL() soon after)
     update();
@@ -461,7 +466,7 @@ void View::sendTextures(GLint shader) {
     m_snowTex = snowTex;
 
     glActiveTexture(GL_TEXTURE2);
-    std::string rockPath = ":/shaders/venus.jpg";
+    std::string rockPath = ":/shaders/venus2.jpg";
     GLuint rockTex = loadTexture(QString::fromStdString(rockPath));
     GLint rockLoc = glGetUniformLocation(m_shader, "rockTexture");
     glUniform1i(rockLoc, 2);

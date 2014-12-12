@@ -81,6 +81,8 @@ private:
     GLuint m_rockTex;
     GLuint m_lavaTex;
     GLuint m_dirtTex;
+    bool m_shadowsOn;
+    bool m_showShadowmap;
     // TODO: shouldn't have own vao, just for the sanity square
     GLuint m_vaoID;
     void setLight(const LightData &light);
