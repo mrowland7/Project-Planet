@@ -5,6 +5,10 @@
 #include "camera/CamtransCamera.h"
 #include "ResourceLoader.h"
 
+#define ORBIT_X 0
+#define ORBIT_Y 1.5
+#define ORBIT_Z 1.5
+
 View::View(QWidget *parent) : QGLWidget(parent)
 {
     // View needs all mouse move events, not just mouse drag events
@@ -33,8 +37,8 @@ View::View(QWidget *parent) : QGLWidget(parent)
     // mike test
 //    m_sunCamera->setClip(.00001,10);
 //    m_camera->setClip(.00001,10);
-    m_sunCamera->orientLook(glm::vec4(0, 1, 2, 0),
-                                glm::vec4(0, -1, -2, 0),
+    m_sunCamera->orientLook(glm::vec4(ORBIT_X, ORBIT_Y, ORBIT_Z, 0),
+                                glm::vec4(-ORBIT_Z, -ORBIT_Y, -ORBIT_Z, 0),
                                 glm::vec4(0, 1, 0, 0));
     m_camera->orientLook(glm::vec4(2, 2, 5, 0),
                                 glm::vec4(-2, -2, -5, 0),
@@ -396,14 +400,14 @@ void View::tick()
     // opposite position: y = -1, z = -2
 
     float timeMsec = time.currentTime().msec() + time.currentTime().second() * 1000;
-    float piTime = timeMsec * (2 * 3.1415926 / 30000.0); // loop every two minutes?
+    float piTime = timeMsec * (2 * 3.1415926 / 1200000.0); // loop every two minutes?
     float adjustTimeY = glm::cos(piTime);
     float adjustTimeZ = glm::sin(piTime);
-    float newY = adjustTimeY * 2;
-    float newZ = adjustTimeZ * 2;
+    float newY = adjustTimeY * ORBIT_Y;
+    float newZ = adjustTimeZ * ORBIT_Z;
 
-    m_sunCamera->orientLook(glm::vec4(0, newY, newZ, 0),
-                            glm::vec4(0, 0 - newY, 0 - newZ, 0),
+    m_sunCamera->orientLook(glm::vec4(ORBIT_X, newY, newZ, 0),
+                            glm::vec4(-ORBIT_X, 0 - newY, 0 - newZ, 0),
                             glm::vec4(0, 1, 0, 0));
 
     // Flag this view for repainting (Qt will call paintGL() soon after)

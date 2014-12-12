@@ -42,7 +42,7 @@ vec4 sampleTextures()
 vec2 rotate(vec2 blah)
 {
     // internet says this is a RNG: http://stackoverflow.com/questions/12964279/
-    float randomish = 2 * 3.1415926535 * fract(sin(dot(gl_FragCoord.xy ,vec2(12.9898,78.233))) * 43758.5453);
+    float randomish = 2 * 3.1415926535 * fract(sin(dot(gl_FragCoord.yz ,vec2(12.9898,78.233))) * 43758.5453);
     float cr = cos(randomish);
     float sr = sin(randomish);
     return vec2(
@@ -66,7 +66,7 @@ void main()
     //color += max (vec3(0), lightColors[i] * specular_color * specIntensity);
 
     vec4 planetTexture = sampleTextures();
-    vec3 realColor = planetTexture.xyz + ambient;//color + ambient + diffuse;
+    vec3 realColor = planetTexture.xyz + ambient + diffuse/3;//color + ambient + diffuse;
 //    vec3 realColor = color + ambient + diffuse;
 
     float depthValUnadjusted = pos_shadowSpace.z / pos_shadowSpace.w;//11.0; // Z of the current object in sun-space
@@ -91,20 +91,43 @@ void main()
     else {
         float visibility = 1.0;
         if (shadowsOn == 2) {
-            float sampleSpread = 1000;
+            float sampleSpread =200;
+            float dropPer = 0.15/2/2;
             //four pseudo-random-rotated points, rotated more around a grid
     //        float randomRotate = asin(gl_FragCoord.x);
-            vec2 rotatedSamples[4] = vec2[] (
+            vec2 rotatedSamples[8] = vec2[] (
                     rotate(vec2(-.8, .1)) / sampleSpread,
                     rotate(vec2(-.2, -.8)) / sampleSpread,
                     rotate(vec2(.25, .75)) / sampleSpread,
-                    rotate(vec2(.87, -.12)) / sampleSpread
+                    rotate(vec2(.87, -.12)) / sampleSpread,
+                    rotate(vec2(-.5, .4)) / sampleSpread,
+                    rotate(vec2(.05, -.9)) / sampleSpread,
+                    rotate(vec2(.42, .67)) / sampleSpread,
+                    rotate(vec2(.68, -.42)) / sampleSpread
                     );
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < 8; i++) {
                 float val = texture(tex, adj + rotatedSamples[i]).x;
                 float diff2 = depthVal - val;
                 if (diff2 > 0.01) {
-                    visibility = visibility - 0.15;
+                    visibility = visibility - dropPer;
+                }
+            }
+            vec2 gridSamples[9] = vec2[] (
+                    rotate(vec2(-1, -1)) / sampleSpread,
+                    rotate(vec2(-1, 0)) / sampleSpread,
+                    rotate(vec2(-1, 1)) / sampleSpread,
+                    rotate(vec2(0, -1)) / sampleSpread,
+                    rotate(vec2(0, 0)) / sampleSpread,
+                    rotate(vec2(0, 1)) / sampleSpread,
+                    rotate(vec2(1, -1)) / sampleSpread,
+                    rotate(vec2(1, 0)) / sampleSpread,
+                    rotate(vec2(1, 1)) / sampleSpread
+                    );
+            for (int i = 0; i < 9; i++) {
+                float val = texture(tex, adj + gridSamples[i]).x;
+                float diff2 = depthVal - val;
+                if (diff2 > 0.01) {
+                    visibility = visibility - dropPer;
                 }
             }
         }
