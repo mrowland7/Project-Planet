@@ -17,25 +17,22 @@ void main(){
 
     float diff = depthVal - shadowVal; // gap between the two. + = difference
 
-    // Point not in the light.
+    // Red: Point not in the light.
     if (adj.x <= 0 || adj.x >= 1
             || adj.y <= 0 || adj.y >= 1) {
         fragColor = vec4(1, 0, 0 ,1);
     }
-    // Something fucked up
+    // Yellow: depth value bad
     else if (depthVal < 0 || depthVal > 1
              || shadowVal < 0 || shadowVal > 1) {
         fragColor = vec4(1, 1, 0 ,1);
     }
     else {
-        if (diff > 0.01) {
-            fragColor = vec4(0, 1, 0, 1);
-        }
-        else if (depthVal == 1) {
-            fragColor = vec4(1, 1, 1, 1);
+        if (diff > 0.001) {
+//            fragColor = vec4(0, 1, 0, 1);
         }
         else {
-            fragColor = vec4(0, 0, 1, 1);
+//            fragColor = vec4(0, 0, 1, 1);
         }
 //        fragColor = vec4(depthVal, depthVal, depthVal, 1);
 //        fragColor = vec4(pos_shadowSpace.xyz, 1);

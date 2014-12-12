@@ -208,17 +208,17 @@ void View::renderFromCamera(CamtransCamera* camera, GLuint shader) {
             glm::value_ptr(m_tree->getModel()));
 
 //    // TODO: instead of rendering square, do chunk rendering here
-    glBindVertexArray(m_vaoID);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    glDrawArrays(GL_TRIANGLES, 6, 6);
-    glDrawArrays(GL_TRIANGLES, 12, 6);
-    glBindVertexArray(0);
+//    glBindVertexArray(m_vaoID);
+//    glDrawArrays(GL_TRIANGLES, 0, 6);
+//    glDrawArrays(GL_TRIANGLES, 6, 6);
+//    glDrawArrays(GL_TRIANGLES, 12, 6);
+//    glBindVertexArray(0);
 
     //setLights
-//    LightData ld = {0, glm::vec3(1,1,0),glm::vec3(m_camera->getPosition())};
-//    this->setLight(ld);
+    LightData ld = {0, glm::vec3(1,1,0),glm::vec3(m_camera->getPosition())};
+    this->setLight(ld);
 
-//    m_tree->draw(glm::vec3(), 0, 0, shader);
+    m_tree->draw(glm::vec3(), 0, 0, shader);
 }
 
 void View::initSquare() {
@@ -363,11 +363,11 @@ void View::tick()
 
     if(m_forward) {
         m_camera->translate(m_camera->getLook()*m_moveSpeed*seconds);
-        m_sunCamera->translate(m_sunCamera->getLook()*m_moveSpeed*seconds);
+//        m_sunCamera->translate(m_sunCamera->getLook()*m_moveSpeed*seconds);
     }
     if(m_backward) {
         m_camera->translate(-m_camera->getLook()*m_moveSpeed*seconds);
-        m_sunCamera->translate(-m_sunCamera->getLook()*m_moveSpeed*seconds);
+//        m_sunCamera->translate(-m_sunCamera->getLook()*m_moveSpeed*seconds);
     }
 
     // TODO: Implement the demo update here
