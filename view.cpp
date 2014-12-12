@@ -24,16 +24,10 @@ View::View(QWidget *parent) : QGLWidget(parent)
 
     m_sunCamera = new CamtransCamera();
     m_camera = new CamtransCamera();
-//    m_sunCamera->orientLook(glm::vec4(0, 0, 2, 0),
-//                            glm::vec4(0, 0, -2, 0),
-//                            glm::vec4(0, 1, 0, 0));
-//    m_sunCamera->setClip(.00001,10);
-//    m_camera->orientLook(glm::vec4(0, 0, 2, 0),
-//                            glm::vec4(0, 0, -2, 0),
-//                            glm::vec4(0, 1, 0, 0));
-//    m_camera->setClip(.00001,10);
 //    m_sunCamera->setHeightAngle(125);
     // mike test
+//    m_sunCamera->setClip(.00001,10);
+//    m_camera->setClip(.00001,10);
     m_sunCamera->orientLook(glm::vec4(0, 1, 2, 0),
                                 glm::vec4(0, -1, -2, 0),
                                 glm::vec4(0, 1, 0, 0));
@@ -208,7 +202,7 @@ void View::renderFromCamera(CamtransCamera* camera, GLuint shader) {
 //    glBindVertexArray(0);
 
     //setLights
-    LightData ld = {0, glm::vec3(1,1,0),glm::vec3(m_camera->getPosition())};
+    LightData ld = {0, glm::vec3(1,1,0), glm::vec3(m_sunCamera->getPosition())};
     this->setLight(ld);
 
     m_tree->draw(glm::vec3(), 0, 0, shader);
