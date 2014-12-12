@@ -66,7 +66,6 @@ private:
     GLuint m_shadowmapDepthAttachment;
     // TODO: shouldn't have own vao, just for the sanity square
     GLuint m_vaoID;
-    std::map<string, GLint> m_uniformLocs;
     void setLight(const LightData &light);
 
     glm::vec3 getRayFromScreenCoord(glm::vec2 mouse);

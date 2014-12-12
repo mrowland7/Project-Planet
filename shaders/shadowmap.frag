@@ -1,6 +1,5 @@
 #version 330 core
 
-in float depth;
 in vec4 pos_shadowSpace;
 //uniform sampler2D tex;
 out vec4 fragColor;

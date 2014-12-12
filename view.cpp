@@ -23,34 +23,22 @@ View::View(QWidget *parent) : QGLWidget(parent)
 
 
     m_sunCamera = new CamtransCamera();
+    m_camera = new CamtransCamera();
 //    m_sunCamera->orientLook(glm::vec4(0, 0, 2, 0),
 //                            glm::vec4(0, 0, -2, 0),
 //                            glm::vec4(0, 1, 0, 0));
 //    m_sunCamera->setClip(.00001,10);
-    m_camera = new CamtransCamera();
 //    m_camera->orientLook(glm::vec4(0, 0, 2, 0),
 //                            glm::vec4(0, 0, -2, 0),
 //                            glm::vec4(0, 1, 0, 0));
 //    m_camera->setClip(.00001,10);
 //    m_sunCamera->setHeightAngle(125);
     // mike test
-//    m_camera->orientLook(glm::vec4(0, 1, 2, 0),
-//                            glm::vec4(0, -1, -2, 0),
-//                            glm::vec4(0, 1, 0, 0));
-//    m_camera->orientLook(glm::vec4(2, 2, 4, 0),
-//                            glm::vec4(-2, -2, -4, 0),
-//                            glm::vec4(0, 1, 0, 0));
-//    m_camera->orientLook(glm::vec4(0, 0, 2, 0),
-//                            glm::vec4(0, 0, -1, 0),
-//                            glm::vec4(0, 1, 0, 0));
     m_sunCamera->orientLook(glm::vec4(0, 1, 2, 0),
                                 glm::vec4(0, -1, -2, 0),
                                 glm::vec4(0, 1, 0, 0));
-    m_camera->orientLook(glm::vec4(0, 1, 2, 0),
-                                glm::vec4(0, -1, -2, 0),
-                                glm::vec4(0, 1, 0, 0));
-    m_camera->orientLook(glm::vec4(2, 2, 4, 0),
-                                glm::vec4(-2, -2, -4, 0),
+    m_camera->orientLook(glm::vec4(2, 2, 5, 0),
+                                glm::vec4(-2, -2, -5, 0),
                                 glm::vec4(0, 1, 0, 0));
 }
 
@@ -123,14 +111,14 @@ void View::initShaderInfo() {
             ":/shaders/shadowmap.vert",
             ":/shaders/shadowmap.frag");
 
-    m_uniformLocs["p"]= glGetUniformLocation(m_shader, "p");
-    m_uniformLocs["m"]= glGetUniformLocation(m_shader, "m");
-    m_uniformLocs["v"]= glGetUniformLocation(m_shader, "v");
-    m_uniformLocs["mvp"]= glGetUniformLocation(m_shader, "mvp"); // TODO don't need this?
-    m_uniformLocs["useLighting"]= glGetUniformLocation(m_shader, "useLighting");
-    m_uniformLocs["tex"] = glGetUniformLocation(m_shader, "tex");
-    m_uniformLocs["lightPosition"] = glGetUniformLocation(m_shader, "lightPosition");
-    m_uniformLocs["lightColor"] = glGetUniformLocation(m_shader, "lightColor");
+//    m_uniformLocs["p"]= glGetUniformLocation(m_shader, "p");
+//    m_uniformLocs["m"]= glGetUniformLocation(m_shader, "m");
+//    m_uniformLocs["v"]= glGetUniformLocation(m_shader, "v");
+//    m_uniformLocs["mvp"]= glGetUniformLocation(m_shader, "mvp"); // TODO don't need this?
+//    m_uniformLocs["useLighting"]= glGetUniformLocation(m_shader, "useLighting");
+//    m_uniformLocs["tex"] = glGetUniformLocation(m_shader, "tex");
+//    m_uniformLocs["lightPosition"] = glGetUniformLocation(m_shader, "lightPosition");
+//    m_uniformLocs["lightColor"] = glGetUniformLocation(m_shader, "lightColor");
 
 
 }
@@ -204,8 +192,13 @@ void View::renderFromCamera(CamtransCamera* camera, GLuint shader) {
             glm::value_ptr(camera->getProjectionMatrix()));
     glUniformMatrix4fv(glGetUniformLocation(shader, "v"), 1, GL_FALSE,
             glm::value_ptr(camera->getViewMatrix()));
-    glUniformMatrix4fv(m_uniformLocs["m"], 1, GL_FALSE,
-            glm::value_ptr(m_tree->getModel()));
+    if (shader == m_shader) {
+        glUniformMatrix4fv(glGetUniformLocation(m_shader, "m"), 1, GL_FALSE,
+                glm::value_ptr(m_tree->getModel()));
+    } else {
+        glUniformMatrix4fv(glGetUniformLocation(m_shadowmapShader, "m"), 1, GL_FALSE,
+                glm::value_ptr(glm::mat4()));
+    }
 
 //    // TODO: instead of rendering square, do chunk rendering here
 //    glBindVertexArray(m_vaoID);
@@ -363,11 +356,9 @@ void View::tick()
 
     if(m_forward) {
         m_camera->translate(m_camera->getLook()*m_moveSpeed*seconds);
-//        m_sunCamera->translate(m_sunCamera->getLook()*m_moveSpeed*seconds);
     }
     if(m_backward) {
         m_camera->translate(-m_camera->getLook()*m_moveSpeed*seconds);
-//        m_sunCamera->translate(-m_sunCamera->getLook()*m_moveSpeed*seconds);
     }
 
     // TODO: Implement the demo update here
@@ -421,8 +412,8 @@ glm::vec3 View::getRayFromScreenCoord(glm::vec2 mouse) {
 
 void View::setLight(const LightData &light)
 {
-    glUniform3f(m_uniformLocs["lightPosition"], light.pos.x, light.pos.y, light.pos.z);
+    glUniform3f(glGetUniformLocation(m_shader, "lightPosition"), light.pos.x, light.pos.y, light.pos.z);
 
-    glUniform3f(m_uniformLocs["lightColor"], light.color.x, light.color.y, light.color.z);
+    glUniform3f(glGetUniformLocation(m_shader, "lightColor"), light.color.x, light.color.y, light.color.z);
 
 }

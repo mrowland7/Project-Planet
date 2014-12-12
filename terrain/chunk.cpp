@@ -17,10 +17,6 @@ Chunk::Chunk(int level, glm::vec2 planePos, int numChunksX, GLint shader, GLint 
     m_biomeData = 0;
     m_shader = shader;
     m_shadowShader = m_shadowShader;
-
-
-
-
 }
 
 Chunk::~Chunk() {

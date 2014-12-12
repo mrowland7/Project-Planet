@@ -28,20 +28,20 @@ void main(){
         fragColor = vec4(1, 1, 0 ,1);
     }
     else {
-        if (diff > 0.001) {
+        // in shadow
+        float visibility = 1.0;
+        if (diff > 0.01) {
 //            fragColor = vec4(0, 1, 0, 1);
+            visibility = 0.5;
         }
-        else {
+        // not in shadow
+//        else {
 //            fragColor = vec4(0, 0, 1, 1);
-        }
+//        }
+        fragColor = vec4(visibility * color, 1.0);
 //        fragColor = vec4(depthVal, depthVal, depthVal, 1);
 //        fragColor = vec4(pos_shadowSpace.xyz, 1);
 //        fragColor = vec4(shadowVal, shadowVal, shadowVal, 1);
 //    }
-//    else {
-//        fragColor = vec4(0, 1, 0 ,1);
-//    }
     }
-
-//    fragColor = vec4(color,1 );
 }
