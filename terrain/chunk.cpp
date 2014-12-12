@@ -323,8 +323,12 @@ void Chunk::subdivideSquareDiamond2(glm::vec2 topleft, glm::vec2 botright){
 void Chunk::initGL()
 {
 
+    int numFloats = 10;
+
     GLuint normalAttribLoc = glGetAttribLocation(m_shader, "normal");
     GLuint positionAttribLoc = glGetAttribLocation(m_shader, "position");
+    GLuint texCoordAttribLoc = glGetAttribLocation(m_shader, "texCoord");
+    GLuint dataAttribLoc = glGetAttribLocation(m_shader, "data");
 
     glm::vec3 *normals = new glm::vec3[(VERTEX_GRID_WIDTH+1)*(VERTEX_GRID_WIDTH+1)];
     glm::vec3 *vertices = new glm::vec3[(VERTEX_GRID_WIDTH+1)*(VERTEX_GRID_WIDTH+1)];
@@ -333,27 +337,33 @@ void Chunk::initGL()
     populateNormals(vertices, normals);
 
 
-    GLfloat *vertexBufferData = new GLfloat[12*(VERTEX_GRID_WIDTH+1)*(VERTEX_GRID_WIDTH)];
+    GLfloat *vertexBufferData = new GLfloat[2*numFloats*(VERTEX_GRID_WIDTH+1)*(VERTEX_GRID_WIDTH)];
     for(int i = 0; i < VERTEX_GRID_WIDTH; i++) {
         for(int j = 0; j < VERTEX_GRID_WIDTH + 1; j++) {
             int bufferIndex = i*(VERTEX_GRID_WIDTH+1) + j;
-            int test = getIndex(j,i);
 
-            vertexBufferData[12*bufferIndex] = vertices[getIndex(j,i)].x;
-            vertexBufferData[12*bufferIndex+1] = vertices[getIndex(j,i)].y;
-            vertexBufferData[12*bufferIndex+2] = vertices[getIndex(j,i)].z;
-            vertexBufferData[12*bufferIndex+3] = normals[getIndex(j,i)].x;
-            vertexBufferData[12*bufferIndex+4] = normals[getIndex(j,i)].y;
-            vertexBufferData[12*bufferIndex+5] = normals[getIndex(j,i)].z;
+            vertexBufferData[2*numFloats*bufferIndex] = vertices[getIndex(j,i)].x;
+            vertexBufferData[2*numFloats*bufferIndex+1] = vertices[getIndex(j,i)].y;
+            vertexBufferData[2*numFloats*bufferIndex+2] = vertices[getIndex(j,i)].z;
+            vertexBufferData[2*numFloats*bufferIndex+3] = normals[getIndex(j,i)].x;
+            vertexBufferData[2*numFloats*bufferIndex+4] = normals[getIndex(j,i)].y;
+            vertexBufferData[2*numFloats*bufferIndex+5] = normals[getIndex(j,i)].z;
+            vertexBufferData[2*numFloats*bufferIndex+6] = (float)j/VERTEX_GRID_WIDTH;
+            vertexBufferData[2*numFloats*bufferIndex+7] = (float)i/VERTEX_GRID_WIDTH;
+            vertexBufferData[2*numFloats*bufferIndex+8] = m_heightData[getIndex(j,i)];
+            vertexBufferData[2*numFloats*bufferIndex+9] = m_biomeData[getIndex(j,i)];
 
-            vertexBufferData[12*bufferIndex+6] = vertices[getIndex(j,i+1)].x;
-            vertexBufferData[12*bufferIndex+7] = vertices[getIndex(j,i+1)].y;
-            vertexBufferData[12*bufferIndex+8] = vertices[getIndex(j,i+1)].z;
-            vertexBufferData[12*bufferIndex+9] = normals[getIndex(j,i+1)].x;
-            vertexBufferData[12*bufferIndex+10] = normals[getIndex(j,i+1)].y;
-            vertexBufferData[12*bufferIndex+11] = normals[getIndex(j,i+1)].z;
+            vertexBufferData[2*numFloats*bufferIndex+10] = vertices[getIndex(j,i+1)].x;
+            vertexBufferData[2*numFloats*bufferIndex+11] = vertices[getIndex(j,i+1)].y;
+            vertexBufferData[2*numFloats*bufferIndex+12] = vertices[getIndex(j,i+1)].z;
+            vertexBufferData[2*numFloats*bufferIndex+13] = normals[getIndex(j,i+1)].x;
+            vertexBufferData[2*numFloats*bufferIndex+14] = normals[getIndex(j,i+1)].y;
+            vertexBufferData[2*numFloats*bufferIndex+15] = normals[getIndex(j,i+1)].z;
+            vertexBufferData[2*numFloats*bufferIndex+16] = (float)j/VERTEX_GRID_WIDTH;
+            vertexBufferData[2*numFloats*bufferIndex+17] = (float)(i+1)/VERTEX_GRID_WIDTH;
+            vertexBufferData[2*numFloats*bufferIndex+18] = m_heightData[getIndex(j,i+1)];
+            vertexBufferData[2*numFloats*bufferIndex+19] = m_biomeData[getIndex(j,i+1)];
 
-            int k = 10;
         }
     }
 
@@ -387,7 +397,7 @@ void Chunk::initGL()
     //        glVertexAttribPointer.
 
     // Give our vertices to OpenGL.
-    glBufferData(GL_ARRAY_BUFFER, 12*((VERTEX_GRID_WIDTH+1)*(VERTEX_GRID_WIDTH))*sizeof(GLfloat), vertexBufferData, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 2*numFloats*((VERTEX_GRID_WIDTH+1)*(VERTEX_GRID_WIDTH))*sizeof(GLfloat), vertexBufferData, GL_STATIC_DRAW);
 
 
     // Expose vertices to shader
@@ -397,7 +407,7 @@ void Chunk::initGL()
        3,                  // num vertices per element (3 for triangle)
        GL_FLOAT,           // type
        GL_FALSE,           // normalized?
-       6*sizeof(GLfloat),                  // stride
+       numFloats*sizeof(GLfloat),                  // stride
        (void*)0            // array buffer offset
     );
 
@@ -407,9 +417,29 @@ void Chunk::initGL()
        3,                  // num vertices per element (3 for triangle)
        GL_FLOAT,           // type
        GL_FALSE,            // normalized?
-       6*sizeof(GLfloat),                  // stride
+       numFloats*sizeof(GLfloat),                  // stride
        (void*)(3*sizeof(GLfloat))            // array buffer offset
     );
+
+    glEnableVertexAttribArray(texCoordAttribLoc);
+     glVertexAttribPointer(
+        texCoordAttribLoc,
+        2,                  // num vertices per element (3 for triangle)
+        GL_FLOAT,           // type
+        GL_FALSE,            // normalized?
+        numFloats*sizeof(GLfloat),                  // stride
+        (void*)(6*sizeof(GLfloat))            // array buffer offset
+     );
+
+     glEnableVertexAttribArray(dataAttribLoc);
+      glVertexAttribPointer(
+         dataAttribLoc,
+         2,                  // num vertices per element (3 for triangle)
+         GL_FLOAT,           // type
+         GL_FALSE,            // normalized?
+         numFloats*sizeof(GLfloat),                  // stride
+         (void*)(8*sizeof(GLfloat))            // array buffer offset
+      );
 
 
 
@@ -419,9 +449,9 @@ void Chunk::initGL()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    delete vertices;
-    delete normals;
-    //delete[] vertexBufferData;
+    delete[] vertices;
+    delete[] normals;
+    delete[] vertexBufferData;
 
 
 }

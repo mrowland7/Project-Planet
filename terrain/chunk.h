@@ -21,9 +21,9 @@ public:
     //CONSTANTS
     const int VERTEX_GRID_WIDTH = 1024;//number squares in our vertex grid
     const float MAX_MOUNTAIN_HEIGHT = .1f;
-    const float ROUGHNESS = .8;
+    const float ROUGHNESS = .4;
     const int MAX_DEPTH = 11;
-    const int DECAY = 2.f;
+    const int DECAY = 2.5f;
 
     void draw(GLint shader);
     void drawRecursive(glm::vec3 cameraPos, float thetaWidth, float thetaHeight, int m_level, GLint shader);
