@@ -6,6 +6,10 @@ out vec3 _lightColor;
 out vec4 pos_shadowSpace;
 out vec3 color;
 
+out vec2 coord;
+out float height;
+out float biome;
+
 
 // Transformation matrices
 uniform mat4 p;
@@ -39,4 +43,7 @@ void main(){
 
     gl_Position = p * position_cameraSpace;
     color = objColor;
+    coord = texCoord;
+    height = data.x;
+    biome = data.y;
 }

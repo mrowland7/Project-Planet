@@ -4,12 +4,41 @@ in vec3 normalWorldSpace;
 in vec3 vertexToLight;
 in vec3 _lightColor;
 
+in vec2 coord; // terrain mapping coord
+in float height;
+in float biome; // first height, second biome
+
 in vec3 color;
 in vec4 pos_shadowSpace;
 uniform sampler2D tex;
 out vec4 fragColor;
 
-vec2 rotate(vec2 blah) {
+uniform sampler2D snowTexture;
+uniform sampler2D rockTexture;
+uniform sampler2D grassTexture;
+uniform sampler2D dirtTexture;
+
+const vec2 dirtRange = vec2(-0.5, -0.28);
+const vec2 grassRange = vec2(-0.3, -0.1);
+const vec2 rockRange = vec2(-0.25, 0.05);
+const vec2 snowRange = vec2(0.05, 0.17);
+
+float regionWeight(vec2 region) {
+    float regionDiff = region.y - region.x;
+    float weight = (regionDiff - (abs(height - region.y))) / regionDiff;
+    return max(0.0, weight);
+}
+vec4 sampleTextures()
+{
+    vec4 dirt = texture(dirtTexture, coord) * regionWeight(dirtRange);
+    vec4 grass = texture(grassTexture, coord) * regionWeight(grassRange);
+    vec4 rock = texture(rockTexture, coord) * regionWeight(rockRange);
+    vec4 snow = texture(snowTexture, coord) * regionWeight(snowRange);
+    return dirt + grass + rock + snow;// + vec4(0.5, 0.5, 0, 1);
+
+}
+vec2 rotate(vec2 blah)
+{
     // internet says this is a RNG: http://stackoverflow.com/questions/12964279/
     float randomish = 2 * 3.1415926535 * fract(sin(dot(gl_FragCoord.xy ,vec2(12.9898,78.233))) * 43758.5453);
     float cr = cos(randomish);
@@ -20,7 +49,8 @@ vec2 rotate(vec2 blah) {
                 );
 }
 
-void main(){
+void main()
+{
     //LIGHTING
     vec3 _color = vec3(1,1,1);
     // Add diffuse component
@@ -33,8 +63,9 @@ void main(){
     //vec4 eyeDirection = normalize(vec4(0,0,0,1) - position_cameraSpace);
     //float specIntensity = pow(max(0.0, dot(eyeDirection, lightReflection)), shininess);
     //color += max (vec3(0), lightColors[i] * specular_color * specIntensity);
-
-    vec3 realColor = color + ambient + diffuse;
+    vec4 planetTexture = sampleTextures();
+    vec3 realColor = planetTexture.xyz + ambient;//color + ambient + diffuse;
+//    vec3 realColor = color + ambient + diffuse;
 
     float depthValUnadjusted = pos_shadowSpace.z / pos_shadowSpace.w;//11.0; // Z of the current object in sun-space
     float depthVal = (depthValUnadjusted - 0.999) * 1000; // hack hack hack
@@ -82,4 +113,5 @@ void main(){
 //        fragColor = vec4(shadowVal, shadowVal, shadowVal, 1);
 //    }
     }
+//    fragColor = vec4(texture(snowTexture, adj).xyz, 1);
 }

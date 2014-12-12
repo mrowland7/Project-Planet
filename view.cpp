@@ -153,12 +153,6 @@ void View::renderShadowmap() {
 void View::renderFinal() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    glActiveTexture(GL_TEXTURE0);
-    glUniform1i(glGetUniformLocation(m_shader, "tex"), 0);
-    glBindTexture(GL_TEXTURE_2D, m_shadowmapColorAttachment);
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-
     renderFromCamera(m_camera, m_shader);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
@@ -183,6 +177,10 @@ void View::renderFromCamera(CamtransCamera* camera, GLuint shader) {
     } else {
         glUniformMatrix4fv(glGetUniformLocation(m_shadowmapShader, "m"), 1, GL_FALSE,
                 glm::value_ptr(glm::mat4()));
+    }
+
+    if (shader == m_shader) {
+        sendTextures(shader);
     }
 
 //    // TODO: instead of rendering square, do chunk rendering here
@@ -428,4 +426,80 @@ void View::setLight(const LightData &light)
 
     glUniform3f(glGetUniformLocation(m_shader, "lightColor"), light.color.x, light.color.y, light.color.z);
 
+}
+
+void View::sendTextures(GLint shader) {
+
+    glActiveTexture(GL_TEXTURE0);
+    glUniform1i(glGetUniformLocation(m_shader, "tex"), 0);
+    glBindTexture(GL_TEXTURE_2D, m_shadowmapColorAttachment);
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+
+    glActiveTexture(GL_TEXTURE1);
+    std::string snowPath = "/course/cs123/data/image/terrain/snow.JPG";
+    GLuint snowTex = loadTexture(QString::fromStdString(snowPath));
+    GLint snowLoc = glGetUniformLocation(m_shader, "snowTexture");
+    glUniform1i(snowLoc, 1);
+    glBindTexture(GL_TEXTURE_2D, snowTex);
+
+    glActiveTexture(GL_TEXTURE2);
+    std::string rockPath = "/course/cs123/data/image/terrain/rock.JPG";
+    GLuint rockTex = loadTexture(QString::fromStdString(rockPath));
+    GLint rockLoc = glGetUniformLocation(m_shader, "rockTexture");
+    glUniform1i(rockLoc, 2);
+    glBindTexture(GL_TEXTURE_2D, rockTex);
+
+    glActiveTexture(GL_TEXTURE3);
+    std::string grassPath = "/course/cs123/data/image/terrain/grass.JPG";
+    GLuint grassTex = loadTexture(QString::fromStdString(grassPath));
+    GLint grassLoc = glGetUniformLocation(m_shader, "grassTexture");
+    glUniform1i(grassLoc, 3);
+    glBindTexture(GL_TEXTURE_2D, grassTex);
+
+    glActiveTexture(GL_TEXTURE4);
+    std::string dirtPath = "/course/cs123/data/image/terrain/dirt.JPG";
+    GLuint dirtTex = loadTexture(QString::fromStdString(dirtPath));
+    GLint dirtLoc = glGetUniformLocation(m_shader, "dirtTexture");
+    glUniform1i(dirtLoc, 4);
+    glBindTexture(GL_TEXTURE_2D, dirtTex);
+
+
+    glActiveTexture(GL_TEXTURE0);
+}
+
+GLuint View::loadTexture(const QString &path)
+{
+    QImage texture;
+    QFile file(path);
+    if(!file.exists()) return -1;
+    texture.load(file.fileName());
+    texture = QGLWidget::convertToGLFormat(texture);
+
+    // Put your code here
+    GLuint id;
+    glGenTextures(1, &id);
+    glBindTexture(GL_TEXTURE_2D, id);
+
+    glTexImage2D(GL_TEXTURE_2D,
+                 0, //level
+                 GL_RGBA, // internal format
+                 texture.width(),
+                 texture.height(),
+                 0, // border... always 0
+                 GL_RGBA, // format
+                 GL_UNSIGNED_BYTE, // type of data,
+                 texture.bits() // pointer to image data
+                 );
+
+
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MIN_FILTER,
+                    GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MAG_FILTER,
+                    GL_LINEAR);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    return id; // Return something meaningful
 }
