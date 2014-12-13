@@ -86,6 +86,7 @@ private:
     GLuint m_starsTex;
     bool m_shadowsOn;
     bool m_showShadowmap;
+    bool m_rotating;
     // TODO: shouldn't have own vao, just for the sanity square
     GLuint m_vaoID;
     void setLight(const LightData &light);

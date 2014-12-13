@@ -45,6 +45,7 @@ View::View(QWidget *parent) : QGLWidget(parent)
                                 glm::vec4(0, 1, 0, 0));
     m_shadowsOn = true;
     m_showShadowmap = false;
+    m_rotating = true;
 }
 
 View::~View()
@@ -191,12 +192,6 @@ void View::renderSkybox()
     glUniform1i(starsLoc, 5);
     glBindTexture(GL_TEXTURE_2D, m_starsTex);
     glActiveTexture(GL_TEXTURE0);
-//    glActiveTexture(GL_TEXTURE2);
-//    GLint rockLoc = glGetUniformLocation(m_skyboxShader, "stars");
-//    glUniform1i(rockLoc, 2);
-//    glBindTexture(GL_TEXTURE_2D, m_rockTex);
-//    glActiveTexture(GL_TEXTURE0);
-
 
     glUniformMatrix4fv(glGetUniformLocation(shader, "p"), 1, GL_FALSE,
             glm::value_ptr(m_camera->getProjectionMatrix()));
@@ -416,6 +411,9 @@ void View::keyReleaseEvent(QKeyEvent *event)
     if(event->key() == Qt::Key_Z) {
         m_showShadowmap = !m_showShadowmap;
     }
+    if(event->key() == Qt::Key_C) {
+        m_rotating = !m_rotating;
+    }
 }
 
 void View::wheelEvent(QWheelEvent *event) {
@@ -440,16 +438,19 @@ void View::tick()
         m_camera->translate(-m_camera->getLook()*m_moveSpeed*seconds);
     }
 
-    float timeMsec = time.currentTime().msec() + time.currentTime().second() * 1000;
-    float piTime = timeMsec * (2 * 3.1415926 / 240000.0); // loop every two minutes?
-    float adjustTimeY = glm::cos(piTime);
-    float adjustTimeZ = glm::sin(piTime);
-    float newY = adjustTimeY * ORBIT_Y;
-    float newZ = adjustTimeZ * ORBIT_Z;
+    if (m_rotating) {
+        float timeMsec = time.currentTime().msec() + time.currentTime().second() * 1000;
+        float secsPerRotation = 20;
+        float piTime = timeMsec * (2 * 3.1415926 / (secsPerRotation * 1000.0)); // loop every two minutes?
+        float adjustTimeY = glm::cos(piTime);
+        float adjustTimeZ = glm::sin(piTime);
+        float newY = adjustTimeY * ORBIT_Y;
+        float newZ = adjustTimeZ * ORBIT_Z;
 
-    m_sunCamera->orientLook(glm::vec4(ORBIT_X, newY, newZ, 0),
-                            glm::vec4(-ORBIT_X, 0 - newY, 0 - newZ, 0),
-                            glm::vec4(1, 0, 0, 0));
+        m_sunCamera->orientLook(glm::vec4(ORBIT_X, newY, newZ, 0),
+                                glm::vec4(-ORBIT_X, 0 - newY, 0 - newZ, 0),
+                                glm::vec4(1, 0, 0, 0));
+    }
 
     // Flag this view for repainting (Qt will call paintGL() soon after)
     update();

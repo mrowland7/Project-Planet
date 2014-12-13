@@ -30,15 +30,6 @@ float regionWeight(vec2 region) {
     float weight = (regionDiff - (abs(height - region.y))) / regionDiff;
     return max(0.0, weight);
 }
-vec4 sampleTextures()
-{
-    vec4 dirt = texture(dirtTexture, coord) * regionWeight(dirtRange);
-    vec4 lava = texture(lavaTexture, coord) * regionWeight(lavaRange);
-    vec4 rock = texture(rockTexture, coord) * regionWeight(rockRange);
-    vec4 snow = texture(snowTexture, coord) * regionWeight(snowRange);
-    return dirt + lava + rock + snow;// + vec4(0.5, 0.5, 0, 1);
-
-}
 vec2 rotate(vec2 blah)
 {
     // internet says this is a RNG: http://stackoverflow.com/questions/12964279/
@@ -51,24 +42,39 @@ vec2 rotate(vec2 blah)
                 blah.x * sr + blah.y * cr
                 );
 }
+vec4 sampleTextures()
+{
+    // Above ground, texture as land
+    if (height > -0.01) {
+        vec4 dirt = texture(dirtTexture, coord) * regionWeight(dirtRange);
+        vec4 rock = texture(rockTexture, coord) * regionWeight(rockRange);
+        vec4 snow = texture(snowTexture, coord) * regionWeight(snowRange);
+        return (dirt + rock + snow) * 4.0/3.0;
+    }
+    // "Water" level = lava! Sample from a few points to make it look nice
+    else {
+        vec2 near = vec2(coord.x + 0.15, coord.y + 0.15);
+        near.x = near.x > 1 ? near.x - 1 : near.x;
+        near.y = near.y > 1 ? near.y - 1 : near.y;
+        return texture(lavaTexture, coord) / 3
+                + texture(lavaTexture, near) / 3
+                + texture(lavaTexture, vec2(coord.y, coord.x)) / 3;
+    }
+
+}
 
 void main()
 {
-    //LIGHTING
-    // Add diffuse component
+    // Get the color
     vec3 ambient = color*.1f;
     float diffuseIntensity = clamp(.9*dot(vertexToLight, normalWorldSpace),0,1);
     vec3 diffuse = max(vec3(0), _lightColor * color * diffuseIntensity);
-
-    // Add specular component
-    //vec4 lightReflection = normalize(-reflect(vertexToLight, normal_cameraSpace));
-    //vec4 eyeDirection = normalize(vec4(0,0,0,1) - position_cameraSpace);
-    //float specIntensity = pow(max(0.0, dot(eyeDirection, lightReflection)), shininess);
-    //color += max (vec3(0), lightColors[i] * specular_color * specIntensity);
-
     vec4 planetTexture = sampleTextures();
     vec3 realColor = planetTexture.xyz + ambient + diffuse/3;//color + ambient + diffuse;
+//    realColor = vec3(height*5, biome*5, 0);
 
+
+    // Add shadows.
     float depthValUnadjusted = pos_shadowSpace.z / pos_shadowSpace.w;//11.0; // Z of the current object in sun-space
     float depthVal = (depthValUnadjusted - 0.999) * 1000; // hack hack hack
     vec2 adj = vec2((pos_shadowSpace.x / pos_shadowSpace.w + 1) / 2,
@@ -80,14 +86,16 @@ void main()
     // Red: Point not in the light.
     if (adj.x <= 0 || adj.x >= 1
             || adj.y <= 0 || adj.y >= 1) {
-        fragColor = vec4(1, 0, 0 ,1);
+//        fragColor = vec4(1, 0, 0 ,1);
+        fragColor = vec4(realColor * 0.2, 1);
     }
     else {
         float visibility = 1.0;
-        float bias = 0.02;
+        float bias = 0.017;
         if (shadowsOn == 2) {
             float sampleSpread = 200;
             float dropPer = 0.15/2/2;
+            // Rotate randomly some sorta-randomly-distributed points
             vec2 rotatedSamples[8] = vec2[] (
                     rotate(vec2(-.8, .1)) / sampleSpread,
                     rotate(vec2(-.2, -.8)) / sampleSpread,
@@ -105,6 +113,7 @@ void main()
                     visibility = visibility - dropPer;
                 }
             }
+            // Rotate examples from a grid as well
             vec2 gridSamples[9] = vec2[] (
                     rotate(vec2(-1, -1)) / sampleSpread,
                     rotate(vec2(-1, 0)) / sampleSpread,
@@ -127,13 +136,6 @@ void main()
         }
         fragColor = vec4(visibility * realColor, 1.0);
     }
-//    if (shadowsOn == 2) {
-//        fragColor = vec4(0,1,0,1);
-//    } else if (shadowsOn == 1) {
-//        fragColor = vec4(0,1,1,1);
-//    } else {
-//        fragColor = vec4(1,0,0,1);
-//    }
 
 }
 
