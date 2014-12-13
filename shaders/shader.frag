@@ -21,9 +21,10 @@ uniform sampler2D lavaTexture;
 uniform sampler2D dirtTexture;
 
 const vec2 lavaRange = vec2(-0.5, -0.25);
-const vec2 dirtRange = vec2(-0.3, -0.1);
-const vec2 rockRange = vec2(-0.25, 0.05);
-const vec2 snowRange = vec2(0.05, 0.17);
+const vec2 dirtRange = vec2(-0.1, 0.0);
+// "Rock" is a texture of the surface of venus
+const vec2 rockRange = vec2(-0.25, 0.08);
+const vec2 snowRange = vec2(0.05, 0.15);
 
 float regionWeight(vec2 region) {
     float regionDiff = region.y - region.x;
@@ -49,7 +50,7 @@ vec4 sampleTextures()
         vec4 dirt = texture(dirtTexture, coord) * regionWeight(dirtRange);
         vec4 rock = texture(rockTexture, coord) * regionWeight(rockRange);
         vec4 snow = texture(snowTexture, coord) * regionWeight(snowRange);
-        return (dirt + rock + snow) * 4.0/3.0;
+        return (dirt + rock + snow) ;//* 4.0/3.0;
     }
     // "Water" level = lava! Sample from a few points to make it look nice
     else {
