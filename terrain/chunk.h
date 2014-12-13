@@ -19,11 +19,11 @@ public:
 
 
     //CONSTANTS
-    const int VERTEX_GRID_WIDTH = 16;//number squares in our vertex grid
+    const int VERTEX_GRID_WIDTH = 32;//number squares in our vertex grid
     const float MAX_MOUNTAIN_HEIGHT = .1f;
     const float ROUGHNESS = 5.0f;
     //const int MAX_DEPTH = 9;
-    const float DECAY = 2.1;
+    const float DECAY = 2.0f;
     const float RADIUS = .5f;
     const float WATER_LEVEL = 0.f;
 
