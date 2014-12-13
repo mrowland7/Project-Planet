@@ -425,8 +425,8 @@ void View::keyReleaseEvent(QKeyEvent *event)
         m_showShadowmap = !m_showShadowmap;
     }
     if(event->key() == Qt::Key_C) {
-        //m_rotating = (m_rotating+1)%3;
-        m_rotating = m_rotating == 2 ? 0 : 2;
+        m_rotating = (m_rotating+1)%3;
+//        m_rotating = m_rotating == 2 ? 0 : 2;
     }
     if(event->key() == Qt::Key_G) {
         m_tree->setGeneration(true);
@@ -551,7 +551,7 @@ void View::sendTextures(GLint shader) {
     m_rockTex = rockTex;
 
     glActiveTexture(GL_TEXTURE3);
-    std::string lavaPath = ":/shaders/lava2.jpg";
+    std::string lavaPath = ":/shaders/lava.png";
     GLuint lavaTex = loadTexture(QString::fromStdString(lavaPath));
     GLint lavaLoc = glGetUniformLocation(m_shader, "lavaTexture");
     glUniform1i(lavaLoc, 3);
