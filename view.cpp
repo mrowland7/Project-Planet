@@ -45,7 +45,7 @@ View::View(QWidget *parent) : QGLWidget(parent)
                                 glm::vec4(0, 1, 0, 0));
     m_shadowsOn = false;
     m_showShadowmap = false;
-    m_rotating = true;
+    m_rotating = 2;
 }
 
 View::~View()
@@ -172,7 +172,7 @@ void View::renderShadowmap()
             glm::value_ptr(glm::mat4()));
 
     //setLights
-    LightData ld = {0, glm::vec3(1,1,0), glm::vec3(m_sunCamera->getPosition())};
+    LightData ld = {0, glm::vec3(1,1,1), glm::vec3(m_sunCamera->getPosition())};
     this->setLight(ld);
     glUniform3f(glGetUniformLocation(m_shader, "objColor"), 1, 1, 1);
 
@@ -240,7 +240,7 @@ void View::renderFinal() {
     glUniform1i(glGetUniformLocation(m_shader, "shadowsOn"),
                 m_shadowsOn ? 2 : 1);
 
-    LightData ld = {0, glm::vec3(1,1,0), glm::vec3(m_sunCamera->getPosition())};
+    LightData ld = {0, glm::vec3(1,1,1), glm::vec3(m_sunCamera->getPosition())};
     this->setLight(ld);
     glUniform3f(glGetUniformLocation(m_shader, "objColor"), 1, 1, 1);
 
@@ -349,8 +349,12 @@ void View::mouseMoveEvent(QMouseEvent *event)
             glm::vec3 a = glm::vec3(hit1 - center);
             glm::vec3 b = glm::vec3(hit2 - center);
             glm::vec3 axis = glm::normalize(glm::cross(a,b));
-            float angle = acos(glm::dot(a, b)/(glm::length(a)*glm::length(b))-.0001f); //avoid floating point errors...
+            float angle = acos(glm::min(glm::dot(glm::normalize(a), glm::normalize(b)), 1.f)); //avoid floating point errors...
 
+
+            if(angle != angle) {
+                int asd = 10;
+            }
 
             glm::mat4 mat1 = glm::translate(glm::mat4(), glm::vec3(-center));
             glm::mat4 mat2 = glm::rotate(glm::mat4(), angle, glm::vec3(axis));
@@ -395,10 +399,10 @@ void View::keyPressEvent(QKeyEvent *event)
 
     // TODO: Handle keyboard presses here
     if(event->key() == Qt::Key_W) {
-        m_forward = true;
+        //m_forward = true;
     }
     if(event->key() == Qt::Key_S) {
-        m_backward = true;
+       // m_backward = true;
     }
 
      if(event->key() == Qt::Key_G) {
@@ -421,7 +425,8 @@ void View::keyReleaseEvent(QKeyEvent *event)
         m_showShadowmap = !m_showShadowmap;
     }
     if(event->key() == Qt::Key_C) {
-        m_rotating = !m_rotating;
+        //m_rotating = (m_rotating+1)%3;
+        m_rotating = m_rotating == 2 ? 0 : 2;
     }
     if(event->key() == Qt::Key_G) {
         m_tree->setGeneration(true);
@@ -451,7 +456,20 @@ void View::tick()
         m_camera->translate(-m_camera->getLook()*m_moveSpeed*seconds);
     }
 
-    if (m_rotating) {
+    if (m_rotating == 1) {
+        float timeMsec = time.currentTime().msec() + time.currentTime().second() * 1000;
+        // The sun moves around the planet. Sorry, Galileo.
+        float secsPerRotation = 20;
+        float piTime = timeMsec * (2 * 3.1415926 / (secsPerRotation * 1000.0));
+        float adjustTimeY = glm::cos(piTime);
+        float adjustTimeZ = 0; //glm::sin(piTime);
+        float newY = adjustTimeY * ORBIT_Y;
+        float newZ = ORBIT_Z; //adjustTimeZ * ORBIT_Z;
+
+        m_sunCamera->orientLook(glm::vec4(ORBIT_X, newY, newZ, 0),
+                                glm::vec4(-ORBIT_X, 0 - newY, 0 - newZ, 0),
+                                glm::vec4(1, 0, 0, 0));
+    } else if(m_rotating == 2) {
         float timeMsec = time.currentTime().msec() + time.currentTime().second() * 1000;
         // The sun moves around the planet. Sorry, Galileo.
         float secsPerRotation = 20;
@@ -460,7 +478,6 @@ void View::tick()
         float adjustTimeZ = glm::sin(piTime);
         float newY = adjustTimeY * ORBIT_Y;
         float newZ = adjustTimeZ * ORBIT_Z;
-
         m_sunCamera->orientLook(glm::vec4(ORBIT_X, newY, newZ, 0),
                                 glm::vec4(-ORBIT_X, 0 - newY, 0 - newZ, 0),
                                 glm::vec4(1, 0, 0, 0));

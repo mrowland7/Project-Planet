@@ -72,7 +72,7 @@ void main()
     float diffuseIntensity = clamp(.9*dot(vertexToLight, normalWorldSpace),0,1);
     vec3 diffuse = max(vec3(0), _lightColor * color * diffuseIntensity);
     vec4 planetTexture = sampleTextures();
-    vec3 realColor = planetTexture.xyz + ambient;// + diffuse/3;//color + ambient + diffuse;
+    vec3 realColor = planetTexture.xyz + ambient + diffuse/3.f;//color + ambient + diffuse;
 //    realColor = vec3(height*5, biome*5, 0);
 
 
@@ -138,6 +138,6 @@ void main()
         }
         fragColor = vec4(visibility * realColor, 1.0);
     }
-   // fragColor = vec4(diffuse,1);
+
 }
 
