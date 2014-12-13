@@ -1,7 +1,7 @@
 #ifndef VIEW_H
 #define VIEW_H
 
-#include "shapes/ShapesScene.h"
+#include <CS123Common.h>
 #include <qgl.h>
 #include <QTime>
 #include <QTimer>
@@ -51,6 +51,7 @@ private:
     void renderFromCamera(CamtransCamera* camera, GLuint shader);
     void renderFinal();
     void renderShadowmap();
+    void renderSkybox();
     void initShaderInfo();
     void initShadowmapBuffers();
 
@@ -68,11 +69,12 @@ private:
     void sendTextures(GLint shader);
     void sendTexturesRender();
     GLuint loadTexture(const QString &path);
+    GLuint loadTexture3d(const QString &path);
 
-    ShapesScene* m_scene;
     CamtransCamera* m_camera;
     CamtransCamera* m_sunCamera;
     GLuint m_shader;
+    GLuint m_skyboxShader;
     GLuint m_shadowmapShader;
     GLuint m_shadowmapFBO;
     GLuint m_shadowmapColorAttachment;
@@ -81,6 +83,10 @@ private:
     GLuint m_rockTex;
     GLuint m_lavaTex;
     GLuint m_dirtTex;
+    GLuint m_starsTex;
+    bool m_shadowsOn;
+    bool m_showShadowmap;
+    bool m_rotating;
     // TODO: shouldn't have own vao, just for the sanity square
     GLuint m_vaoID;
     void setLight(const LightData &light);

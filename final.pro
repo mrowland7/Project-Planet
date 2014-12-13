@@ -16,9 +16,6 @@ SOURCES += main.cpp \
     shapes/shape.cpp \
     shapes/sphere.cpp \
     camera/CamtransCamera.cpp \
-    shapes/OpenGLScene.cpp \
-    shapes/Scene.cpp \
-    shapes/ShapesScene.cpp \
     terrain/chunk.cpp \
     terrain/TerrainTree.cpp \
     terrain/PerlinNoise.cpp
@@ -176,9 +173,6 @@ HEADERS += mainwindow.h \
     ui_mainwindow.h \
     camera/Camera.h \
     camera/CamtransCamera.h \
-    shapes/OpenGLScene.h \
-    shapes/Scene.h \
-    shapes/ShapesScene.h \
     terrain/chunk.h \
     terrain/TerrainTree.h \
     terrain/PerlinNoise.h
@@ -204,7 +198,9 @@ OTHER_FILES += \
     shaders/shader.frag \
     shaders/shader.vert \
     shaders/shadowmap.vert \
-    shaders/shadowmap.frag
+    shaders/shadowmap.frag \
+    shaders/skybox.frag \
+    shaders/skybox.vert
 
 RESOURCES += \
     shaders/shaders.qrc
