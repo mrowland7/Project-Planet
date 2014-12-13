@@ -33,7 +33,7 @@ void Chunk::draw(GLint shader) {
 
 
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     glBindVertexArray(m_vaoID);
     for (int row = 0; row < VERTEX_GRID_WIDTH; row++){
@@ -167,7 +167,7 @@ void Chunk::generateRoot() {
         float val = (float)((int)(log(VERTEX_GRID_WIDTH)/log(2)))- log(VERTEX_GRID_WIDTH)/log(2);
         assert(val < .00000001f);
 
-        int pWidth = 8;
+      /*  int pWidth = 8;
         float *sparcePerlin = new float[(pWidth+1)*(pWidth+1)];
 
         PerlinNoise pn = PerlinNoise();
@@ -189,12 +189,12 @@ void Chunk::generateRoot() {
                 subdivideSquare(topLeft, botright, 3);
 
             }
-        }
+        }*/
 
-/*
+
         int depth = (int)(log(VERTEX_GRID_WIDTH)/log(2));
         subdivideSquare(glm::vec2(0,0), glm::vec2(VERTEX_GRID_WIDTH, VERTEX_GRID_WIDTH),depth);
-*/
+
 
         initGL();
 
