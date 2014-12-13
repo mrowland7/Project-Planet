@@ -4,6 +4,7 @@ TerrainTree::TerrainTree(GLint shader, GLint shadowShader) {
     m_root = new Chunk(1, glm::vec2(0,0), 1, shader, shadowShader);
     m_root->generateRoot();
     m_model = glm::mat4();
+    m_isGenerating = true;
 
 }
 
@@ -40,8 +41,6 @@ int TerrainTree::getLevel(glm::vec3 cameraPos){
         level = 1;
     }
 
-    std::cout << "level: " << level << std::endl;
-
     return glm::clamp(1, level,20);
 }
 
@@ -54,7 +53,7 @@ void TerrainTree::setModel(glm::mat4 model){
 }
 
 float TerrainTree::getHeight() {
-    return /*m_root->MAX_MOUNTAIN_HEIGHT + */m_root->RADIUS*1.001;
+    return m_root->MAX_MOUNTAIN_HEIGHT + m_root->RADIUS*1.001;
 }
 
 glm::vec3 TerrainTree::getLoc() {
