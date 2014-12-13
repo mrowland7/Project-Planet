@@ -330,6 +330,7 @@ void View::mousePressEvent(QMouseEvent *event)
         m_leftMouseDown = true;
     if(event->buttons() == Qt::RightButton)
         m_rightMouseDown = true;
+
 }
 
 void View::mouseMoveEvent(QMouseEvent *event)
@@ -387,6 +388,9 @@ void View::mouseReleaseEvent(QMouseEvent *event)
 
 void View::keyPressEvent(QKeyEvent *event)
 {
+
+
+
     if (event->key() == Qt::Key_Escape) QApplication::quit();
 
     // TODO: Handle keyboard presses here
@@ -396,6 +400,13 @@ void View::keyPressEvent(QKeyEvent *event)
     if(event->key() == Qt::Key_S) {
         m_backward = true;
     }
+
+     if(event->key() == Qt::Key_G) {
+         m_tree->setGeneration(true);
+     }
+     if(event->key() == Qt::Key_H) {
+         m_tree->setGeneration(false);
+     }
 
 }
 

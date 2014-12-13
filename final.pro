@@ -17,7 +17,8 @@ SOURCES += main.cpp \
     shapes/sphere.cpp \
     camera/CamtransCamera.cpp \
     terrain/chunk.cpp \
-    terrain/TerrainTree.cpp
+    terrain/TerrainTree.cpp \
+    terrain/PerlinNoise.cpp
 
 HEADERS += mainwindow.h \
     view.h \
@@ -173,7 +174,8 @@ HEADERS += mainwindow.h \
     camera/Camera.h \
     camera/CamtransCamera.h \
     terrain/chunk.h \
-    terrain/TerrainTree.h
+    terrain/TerrainTree.h \
+    terrain/PerlinNoise.h
 
 FORMS += mainwindow.ui
 

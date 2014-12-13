@@ -137,6 +137,6 @@ void main()
         }
         fragColor = vec4(visibility * realColor, 1.0);
     }
-
+    fragColor = vec4(diffuse,1);
 }
 
