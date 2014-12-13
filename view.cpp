@@ -6,8 +6,8 @@
 #include "ResourceLoader.h"
 
 #define ORBIT_X 0
-#define ORBIT_Y 1.5
-#define ORBIT_Z 1.5
+#define ORBIT_Y 1.4
+#define ORBIT_Z 1.4
 
 View::View(QWidget *parent) : QGLWidget(parent)
 {
@@ -43,14 +43,16 @@ View::View(QWidget *parent) : QGLWidget(parent)
     m_camera->orientLook(glm::vec4(2, 2, 5, 0),
                                 glm::vec4(-2, -2, -5, 0),
                                 glm::vec4(0, 1, 0, 0));
-    m_shadowsOn = true;
+    m_shadowsOn = false;
     m_showShadowmap = false;
     m_rotating = true;
 }
 
 View::~View()
 {
-    //delete m_tree;
+    delete m_tree;
+    delete m_camera;
+    delete m_sunCamera;
 }
 
 void View::initializeGL()
@@ -451,8 +453,9 @@ void View::tick()
 
     if (m_rotating) {
         float timeMsec = time.currentTime().msec() + time.currentTime().second() * 1000;
+        // The sun moves around the planet. Sorry, Galileo.
         float secsPerRotation = 20;
-        float piTime = timeMsec * (2 * 3.1415926 / (secsPerRotation * 1000.0)); // loop every two minutes?
+        float piTime = timeMsec * (2 * 3.1415926 / (secsPerRotation * 1000.0));
         float adjustTimeY = glm::cos(piTime);
         float adjustTimeZ = glm::sin(piTime);
         float newY = adjustTimeY * ORBIT_Y;
@@ -531,7 +534,7 @@ void View::sendTextures(GLint shader) {
     m_rockTex = rockTex;
 
     glActiveTexture(GL_TEXTURE3);
-    std::string lavaPath = ":/shaders/lava.png";
+    std::string lavaPath = ":/shaders/lava2.jpg";
     GLuint lavaTex = loadTexture(QString::fromStdString(lavaPath));
     GLint lavaLoc = glGetUniformLocation(m_shader, "lavaTexture");
     glUniform1i(lavaLoc, 3);
