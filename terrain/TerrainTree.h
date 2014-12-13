@@ -18,12 +18,14 @@ public:
     void setModel(glm::mat4 model);
     float getHeight();
     glm::vec3 getLoc();
+    void setGeneration(bool isGenerating);
 
 
 private:
     Chunk *m_root;
     int getLevel(glm::vec3 cameraPos);
     glm::mat4 m_model;
+    bool m_isGenerating;
 
 };
 

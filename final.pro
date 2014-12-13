@@ -20,7 +20,8 @@ SOURCES += main.cpp \
     shapes/Scene.cpp \
     shapes/ShapesScene.cpp \
     terrain/chunk.cpp \
-    terrain/TerrainTree.cpp
+    terrain/TerrainTree.cpp \
+    terrain/PerlinNoise.cpp
 
 HEADERS += mainwindow.h \
     view.h \
@@ -179,7 +180,8 @@ HEADERS += mainwindow.h \
     shapes/Scene.h \
     shapes/ShapesScene.h \
     terrain/chunk.h \
-    terrain/TerrainTree.h
+    terrain/TerrainTree.h \
+    terrain/PerlinNoise.h
 
 FORMS += mainwindow.ui
 

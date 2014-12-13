@@ -19,9 +19,9 @@ public:
 
 
     //CONSTANTS
-    const int VERTEX_GRID_WIDTH = 256;//number squares in our vertex grid
+    const int VERTEX_GRID_WIDTH = 64;//number squares in our vertex grid
     const float MAX_MOUNTAIN_HEIGHT = .1f;
-    const float ROUGHNESS = .5f;
+    const float ROUGHNESS = 1.0f;
     //const int MAX_DEPTH = 9;
     const float DECAY = 2.1;
     const float RADIUS = .5f;
@@ -78,6 +78,9 @@ private:
     GLint m_shadowShader;
 
     void drawNormals(glm::vec3 * vertices, glm::vec3 *normals);
+
+
+    float perlin(float x, float y);
 
 
 };

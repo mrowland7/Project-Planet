@@ -13,16 +13,20 @@ TerrainTree::~TerrainTree() {
 }
 
 void TerrainTree::update(glm::vec3 cameraPos) {
+
     glm::vec3 relativeCameraPos = glm::vec3(glm::inverse(m_model)*glm::vec4(cameraPos, 1));
     int level = getLevel(relativeCameraPos);
     m_root->update(relativeCameraPos, level);
 
 }
 
+void TerrainTree::setGeneration(bool isGenerating) {
+    m_isGenerating = isGenerating;
+}
+
 void TerrainTree::draw(glm::vec3 cameraPos, GLint shader) {
     glm::vec3 relativeCameraPos = glm::vec3(glm::inverse(m_model)*glm::vec4(cameraPos, 1));
     int level = getLevel(relativeCameraPos);
-    level = 20; //TODO
     m_root->drawRecursive(relativeCameraPos, level, shader);
 
 }
@@ -31,6 +35,13 @@ int TerrainTree::getLevel(glm::vec3 cameraPos){
     float dist = glm::length(cameraPos-getLoc())-getHeight();
     //int level = (int)(-log(dist/5.f)/log(2)); with height taking MAX_MOUNTAIN_HEIGHT into acount
     int level = (int)(-log(dist*m_root->VERTEX_GRID_WIDTH/256.f)/log(2));
+
+    if(!m_isGenerating) {
+        level = 1;
+    }
+
+    std::cout << "level: " << level << std::endl;
+
     return glm::clamp(1, level,20);
 }
 

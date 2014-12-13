@@ -6,5 +6,6 @@
         <file>shadowmap.vert</file>
         <file>venus.jpg</file>
         <file>lava.png</file>
+        <file>venus2.jpg</file>
     </qresource>
 </RCC>
