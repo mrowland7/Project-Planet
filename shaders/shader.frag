@@ -48,7 +48,8 @@ vec4 sampleTextures()
     // Above ground, texture as land
     if (height > -0.01) {
         vec4 dirt = texture(dirtTexture, coord) * regionWeight(dirtRange);
-        vec4 rock = texture(rockTexture, coord) * regionWeight(rockRange);
+        vec4 rock = (texture(rockTexture, coord) * regionWeight(rockRange)) / 2 +
+                (texture(rockTexture, vec2(coord.y, coord.x)) * regionWeight(rockRange)) / 2;
         vec4 snow = texture(snowTexture, coord) * regionWeight(snowRange);
         return (dirt + rock + snow) ;//* 4.0/3.0;
     }
@@ -71,7 +72,7 @@ void main()
     float diffuseIntensity = clamp(.9*dot(vertexToLight, normalWorldSpace),0,1);
     vec3 diffuse = max(vec3(0), _lightColor * color * diffuseIntensity);
     vec4 planetTexture = sampleTextures();
-    vec3 realColor = planetTexture.xyz + ambient + diffuse/3;//color + ambient + diffuse;
+    vec3 realColor = planetTexture.xyz + ambient;// + diffuse/3;//color + ambient + diffuse;
 //    realColor = vec3(height*5, biome*5, 0);
 
 

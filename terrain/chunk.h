@@ -19,7 +19,7 @@ public:
 
 
     //CONSTANTS
-    const int VERTEX_GRID_WIDTH = 16;//number squares in our vertex grid
+    const int VERTEX_GRID_WIDTH = 32;//number squares in our vertex grid
     const float MAX_MOUNTAIN_HEIGHT = .1f;
     const float ROUGHNESS = 5.0f;
     //const int MAX_DEPTH = 9;

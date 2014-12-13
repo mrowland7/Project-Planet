@@ -534,7 +534,7 @@ void View::sendTextures(GLint shader) {
     m_rockTex = rockTex;
 
     glActiveTexture(GL_TEXTURE3);
-    std::string lavaPath = ":/shaders/lava.png";
+    std::string lavaPath = ":/shaders/lava2.jpg";
     GLuint lavaTex = loadTexture(QString::fromStdString(lavaPath));
     GLint lavaLoc = glGetUniformLocation(m_shader, "lavaTexture");
     glUniform1i(lavaLoc, 3);
