@@ -1,7 +1,7 @@
 #ifndef VIEW_H
 #define VIEW_H
 
-#include "shapes/ShapesScene.h"
+#include <CS123Common.h>
 #include <qgl.h>
 #include <QTime>
 #include <QTimer>
@@ -69,8 +69,8 @@ private:
     void sendTextures(GLint shader);
     void sendTexturesRender();
     GLuint loadTexture(const QString &path);
+    GLuint loadTexture3d(const QString &path);
 
-    ShapesScene* m_scene;
     CamtransCamera* m_camera;
     CamtransCamera* m_sunCamera;
     GLuint m_shader;

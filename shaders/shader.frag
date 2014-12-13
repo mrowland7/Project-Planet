@@ -84,8 +84,9 @@ void main()
     }
     else {
         float visibility = 1.0;
+        float bias = 0.02;
         if (shadowsOn == 2) {
-            float sampleSpread =200;
+            float sampleSpread = 200;
             float dropPer = 0.15/2/2;
             vec2 rotatedSamples[8] = vec2[] (
                     rotate(vec2(-.8, .1)) / sampleSpread,
@@ -100,7 +101,7 @@ void main()
             for (int i = 0; i < 8; i++) {
                 float val = texture(tex, adj + rotatedSamples[i]).x;
                 float diff2 = depthVal - val;
-                if (diff2 > 0.01) {
+                if (diff2 > bias) {
                     visibility = visibility - dropPer;
                 }
             }
@@ -118,7 +119,7 @@ void main()
             for (int i = 0; i < 9; i++) {
                 float val = texture(tex, adj + gridSamples[i]).x;
                 float diff2 = depthVal - val;
-                if (diff2 > 0.01) {
+                if (diff2 > bias) {
                     visibility = visibility - dropPer;
                 }
             }

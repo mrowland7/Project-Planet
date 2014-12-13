@@ -537,7 +537,7 @@ void View::sendTextures(GLint shader) {
     glActiveTexture(GL_TEXTURE5);
     std::string starsPath = ":/shaders/starfield.JPG";
     GLuint starsTex = loadTexture(QString::fromStdString(starsPath));
-    GLint starsLoc = glGetUniformLocation(m_skyboxShader, "starsTexture");
+    GLint starsLoc = glGetUniformLocation(m_skyboxShader, "stars");
     glUniform1i(starsLoc, 5);
     glBindTexture(GL_TEXTURE_2D, starsTex);
     m_starsTex = starsTex;
@@ -604,5 +604,45 @@ GLuint View::loadTexture(const QString &path)
                     GL_LINEAR);
 
     glBindTexture(GL_TEXTURE_2D, 0);
+    return id; // Return something meaningful
+}
+
+GLuint View::loadTexture3d(const QString &path)
+{
+    QImage texture;
+    QFile file(path);
+    if(!file.exists()) return -1;
+    texture.load(file.fileName());
+    texture = QGLWidget::convertToGLFormat(texture);
+
+    // Put your code here
+    GLuint id;
+    glGenTextures(1, &id);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, id);
+
+    glTexImage3D(GL_TEXTURE_CUBE_MAP,
+                 0, //level
+                 GL_RGBA, // internal format
+                 texture.width(),
+                 texture.height(),
+                 texture.depth(),
+                 0, // border... always 0
+                 GL_RGBA, // format
+                 GL_UNSIGNED_BYTE, // type of data,
+                 texture.bits() // pointer to image data
+                 );
+
+    int w = texture.width();
+    int h = texture.height();
+    int d = texture.depth();
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP,
+                    GL_TEXTURE_MIN_FILTER,
+                    GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP,
+                    GL_TEXTURE_MAG_FILTER,
+                    GL_LINEAR);
+
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
     return id; // Return something meaningful
 }
