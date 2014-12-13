@@ -400,12 +400,8 @@ void View::keyPressEvent(QKeyEvent *event)
     }
 
      if(event->key() == Qt::Key_G) {
-         m_tree->setGeneration(true);
-     }
-     if(event->key() == Qt::Key_H) {
          m_tree->setGeneration(false);
      }
-
 }
 
 void View::keyReleaseEvent(QKeyEvent *event)
@@ -425,6 +421,10 @@ void View::keyReleaseEvent(QKeyEvent *event)
     if(event->key() == Qt::Key_C) {
         m_rotating = !m_rotating;
     }
+    if(event->key() == Qt::Key_G) {
+        m_tree->setGeneration(true);
+    }
+
 }
 
 void View::wheelEvent(QWheelEvent *event) {

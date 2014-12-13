@@ -540,7 +540,6 @@ inline int Chunk::getIndex(int col, int row)
 float Chunk::getPerturb(int cur_depth, float height) {
     float scale = 2*glm::abs(height/(VERTEX_GRID_WIDTH) - .5f);
     scale = 1.f - pow(scale, .5f);
-    std::cout << scale << "," << height << std::endl;
     return scale*getPerturb(cur_depth);
 }
 
