@@ -85,7 +85,6 @@ void main()
     else {
         float visibility = 1.0;
         if (shadowsOn == 2) {
-            // do antialiasing- multisample the grid
             float sampleSpread =200;
             float dropPer = 0.15/2/2;
             vec2 rotatedSamples[8] = vec2[] (
@@ -123,6 +122,7 @@ void main()
                     visibility = visibility - dropPer;
                 }
             }
+            if (visibility > 0.75) visibility = 1.0;
         }
         fragColor = vec4(visibility * realColor, 1.0);
     }

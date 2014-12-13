@@ -7,5 +7,8 @@
         <file>venus.jpg</file>
         <file>lava.png</file>
         <file>venus2.jpg</file>
+        <file>skybox.vert</file>
+        <file>skybox.frag</file>
+        <file>starfield.JPG</file>
     </qresource>
 </RCC>

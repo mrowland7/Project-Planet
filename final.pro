@@ -202,7 +202,9 @@ OTHER_FILES += \
     shaders/shader.frag \
     shaders/shader.vert \
     shaders/shadowmap.vert \
-    shaders/shadowmap.frag
+    shaders/shadowmap.frag \
+    shaders/skybox.frag \
+    shaders/skybox.vert
 
 RESOURCES += \
     shaders/shaders.qrc

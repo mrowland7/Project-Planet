@@ -51,6 +51,7 @@ private:
     void renderFromCamera(CamtransCamera* camera, GLuint shader);
     void renderFinal();
     void renderShadowmap();
+    void renderSkybox();
     void initShaderInfo();
     void initShadowmapBuffers();
 
@@ -73,6 +74,7 @@ private:
     CamtransCamera* m_camera;
     CamtransCamera* m_sunCamera;
     GLuint m_shader;
+    GLuint m_skyboxShader;
     GLuint m_shadowmapShader;
     GLuint m_shadowmapFBO;
     GLuint m_shadowmapColorAttachment;
@@ -81,6 +83,7 @@ private:
     GLuint m_rockTex;
     GLuint m_lavaTex;
     GLuint m_dirtTex;
+    GLuint m_starsTex;
     bool m_shadowsOn;
     bool m_showShadowmap;
     // TODO: shouldn't have own vao, just for the sanity square

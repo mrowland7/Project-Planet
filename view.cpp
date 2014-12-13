@@ -39,7 +39,7 @@ View::View(QWidget *parent) : QGLWidget(parent)
 //    m_camera->setClip(.00001,10);
     m_sunCamera->orientLook(glm::vec4(ORBIT_X, ORBIT_Y, ORBIT_Z, 0),
                                 glm::vec4(-ORBIT_Z, -ORBIT_Y, -ORBIT_Z, 0),
-                                glm::vec4(0, 1, 0, 0));
+                                glm::vec4(1, 0, 0, 0));
     m_camera->orientLook(glm::vec4(2, 2, 5, 0),
                                 glm::vec4(-2, -2, -5, 0),
                                 glm::vec4(0, 1, 0, 0));
@@ -111,6 +111,10 @@ void View::initShaderInfo() {
     m_shadowmapShader = ResourceLoader::loadShaders(
             ":/shaders/shadowmap.vert",
             ":/shaders/shadowmap.frag");
+
+    m_skyboxShader = ResourceLoader::loadShaders(
+            ":/shaders/skybox.vert",
+            ":/shaders/skybox.frag");
 }
 
 void View::initShadowmapBuffers() {
@@ -129,15 +133,6 @@ void View::initShadowmapBuffers() {
     glBindRenderbuffer( GL_RENDERBUFFER, m_shadowmapDepthAttachment );
     glRenderbufferStorage( GL_RENDERBUFFER, GL_DEPTH_COMPONENT32, width(), height() );
     glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_shadowmapDepthAttachment );
-//    glActiveTexture( GL_TEXTURE0 );
-//    glGenTextures( 1, &m_shadowmapDepthAttachment );
-//    glBindTexture( GL_TEXTURE_2D, m_shadowmapDepthAttachment);
-//    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-//    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-//    glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0 );
-//    glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_shadowmapDepthAttachment, 0);
-//    // No color buffer
-//    glDrawBuffer(0);
 
     glBindFramebuffer( GL_FRAMEBUFFER, 0);
 }
@@ -146,67 +141,32 @@ void View::paintGL()
 {
     renderShadowmap();
     if (!m_showShadowmap) {
+        renderSkybox();
         renderFinal();
     }
 }
 
 
-void View::renderShadowmap() {
-    if (!m_showShadowmap) {
+void View::renderShadowmap()
+{
+    if (!m_showShadowmap)
+    {
         glBindFramebuffer(GL_FRAMEBUFFER, m_shadowmapFBO);
     }
-    renderFromCamera(m_sunCamera, m_shadowmapShader);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
-void View::renderFinal() {
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    glActiveTexture(GL_TEXTURE0);
-    glUniform1i(glGetUniformLocation(m_shader, "tex"), 0);
-    glBindTexture(GL_TEXTURE_2D, m_shadowmapColorAttachment);
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-
-    renderFromCamera(m_camera, m_shader);
-    glBindTexture(GL_TEXTURE_2D, 0);
-}
-
-void View::renderFromCamera(CamtransCamera* camera, GLuint shader) {
+    GLint shader = m_shadowmapShader;
     glUseProgram(shader);
     glClearColor(0.05, 0.1, 0.2, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // TODO: bad bad bad bad bad
     glm::mat4x4 shadowV = m_sunCamera->getProjectionMatrix() * m_sunCamera->getViewMatrix();
     glUniformMatrix4fv(glGetUniformLocation(shader, "shadow_v"), 1, GL_FALSE, &shadowV[0][0]);
 
     glUniformMatrix4fv(glGetUniformLocation(shader, "p"), 1, GL_FALSE,
-            glm::value_ptr(camera->getProjectionMatrix()));
+            glm::value_ptr(m_sunCamera->getProjectionMatrix()));
     glUniformMatrix4fv(glGetUniformLocation(shader, "v"), 1, GL_FALSE,
-            glm::value_ptr(camera->getViewMatrix()));
-    // TODO: also bad bad bad
-    if (shader == m_shader) {
-        glUniformMatrix4fv(glGetUniformLocation(m_shader, "m"), 1, GL_FALSE,
-                glm::value_ptr(m_tree->getModel()));
-    } else {
-        glUniformMatrix4fv(glGetUniformLocation(m_shadowmapShader, "m"), 1, GL_FALSE,
-                glm::value_ptr(glm::mat4()));
-    }
-
-    if (shader == m_shader) {
-        sendTexturesRender();
-        glUniform1i(glGetUniformLocation(m_shader, "shadowsOn"),
-                    m_shadowsOn ? 2 : 1);
-
-    }
-
-//    // TODO: instead of rendering square, do chunk rendering here
-//    glBindVertexArray(m_vaoID);
-//    glDrawArrays(GL_TRIANGLES, 0, 6);
-//    glDrawArrays(GL_TRIANGLES, 6, 6);
-//    glDrawArrays(GL_TRIANGLES, 12, 6);
-//    glBindVertexArray(0);
+            glm::value_ptr(m_sunCamera->getViewMatrix()));
+    glUniformMatrix4fv(glGetUniformLocation(m_shadowmapShader, "m"), 1, GL_FALSE,
+            glm::value_ptr(glm::mat4()));
 
     //setLights
     LightData ld = {0, glm::vec3(1,1,0), glm::vec3(m_sunCamera->getPosition())};
@@ -215,35 +175,112 @@ void View::renderFromCamera(CamtransCamera* camera, GLuint shader) {
 
     m_tree->update(glm::vec3(m_camera->getPosition()));
     m_tree->draw(glm::vec3(m_camera->getPosition()), shader);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
+
+void View::renderSkybox()
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    GLint shader = m_skyboxShader;
+    glUseProgram(shader);
+    glClearColor(0.05, 0.1, 0.2, 0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glActiveTexture(GL_TEXTURE5);
+    GLint starsLoc = glGetUniformLocation(m_skyboxShader, "stars");
+    glUniform1i(starsLoc, 5);
+    glBindTexture(GL_TEXTURE_2D, m_starsTex);
+    glActiveTexture(GL_TEXTURE0);
+//    glActiveTexture(GL_TEXTURE2);
+//    GLint rockLoc = glGetUniformLocation(m_skyboxShader, "stars");
+//    glUniform1i(rockLoc, 2);
+//    glBindTexture(GL_TEXTURE_2D, m_rockTex);
+//    glActiveTexture(GL_TEXTURE0);
+
+
+    glUniformMatrix4fv(glGetUniformLocation(shader, "p"), 1, GL_FALSE,
+            glm::value_ptr(m_camera->getProjectionMatrix()));
+    glUniformMatrix4fv(glGetUniformLocation(shader, "v"), 1, GL_FALSE,
+            glm::value_ptr(m_camera->getViewMatrix()));
+    glUniformMatrix4fv(glGetUniformLocation(shader, "m"), 1, GL_FALSE,
+            glm::value_ptr(glm::mat4()));
+    glm::vec4 pos = m_camera->getPosition();
+    glUniform3f(glGetUniformLocation(shader, "cameraEyePos"), pos.x, pos.y, pos.z);
+    glUniform2f(glGetUniformLocation(shader, "screenSize"), width(), height());
+//    // TODO: instead of rendering square, do chunk rendering here
+    glBindVertexArray(m_vaoID);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDrawArrays(GL_TRIANGLES, 6, 6);
+    glDrawArrays(GL_TRIANGLES, 12, 6);
+    glBindVertexArray(0);
+}
+
+void View::renderFinal() {
+    GLint shader = m_shader;
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glActiveTexture(GL_TEXTURE0);
+    glUniform1i(glGetUniformLocation(shader, "tex"), 0);
+    glBindTexture(GL_TEXTURE_2D, m_shadowmapColorAttachment);
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+
+    glUseProgram(shader);
+//    glClearColor(0.05, 0.1, 0.2, 0);
+//    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glm::mat4x4 shadowV = m_sunCamera->getProjectionMatrix() * m_sunCamera->getViewMatrix();
+    glUniformMatrix4fv(glGetUniformLocation(shader, "shadow_v"), 1, GL_FALSE, &shadowV[0][0]);
+
+    glUniformMatrix4fv(glGetUniformLocation(shader, "p"), 1, GL_FALSE,
+            glm::value_ptr(m_camera->getProjectionMatrix()));
+    glUniformMatrix4fv(glGetUniformLocation(shader, "v"), 1, GL_FALSE,
+            glm::value_ptr(m_camera->getViewMatrix()));
+        glUniformMatrix4fv(glGetUniformLocation(shader, "m"), 1, GL_FALSE,
+                glm::value_ptr(m_tree->getModel()));
+
+    sendTexturesRender();
+    glUniform1i(glGetUniformLocation(m_shader, "shadowsOn"),
+                m_shadowsOn ? 2 : 1);
+
+    LightData ld = {0, glm::vec3(1,1,0), glm::vec3(m_sunCamera->getPosition())};
+    this->setLight(ld);
+    glUniform3f(glGetUniformLocation(m_shader, "objColor"), 1, 1, 1);
+
+    m_tree->update(glm::vec3(m_camera->getPosition()));
+    m_tree->draw(glm::vec3(m_camera->getPosition()), shader);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 
 void View::initSquare()
 {
-    GLuint vertexLocation1 = glGetAttribLocation(m_shader, "position");
-    GLuint vertexLocation2 = glGetAttribLocation(m_shadowmapShader, "position");
+  //    GLuint vertexLocation1 = glGetAttribLocation(m_shader, "position");
+  //    GLuint vertexLocation2 = glGetAttribLocation(m_shadowmapShader, "position");
+    GLuint vertexLocation3 = glGetAttribLocation(m_skyboxShader, "position");
 
     GLfloat vertexBufferData[] = {
 //        // Square 1
-        0.5f, -0.5f, 0.0f,
-        0.5f, 0.5f, 0.0f,
-       -0.5f, 0.5f, 0.0f,
-       -0.5f, -0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f,
-       -0.5f, 0.5f, 0.0f,
-        // Square 3
-        1.8f, 0.0f, -4.0f,
-        1.8f, 1.8f, -4.0f,
-        0.8f, 1.8f, -4.0f,
-        0.8f, 0.0f, -4.0f,
-        1.8f, 0.0f, -4.0f,
-        0.8f, 1.8f, -4.0f,
-        // Square 2
-        0.8f, -0.2f, -2.0f,
-        0.8f, 0.8f, -2.0f,
-       -0.2f, 0.8f, -2.0f,
-       -0.2f, -0.2f, -2.0f,
-        0.8f, -0.2f, -2.0f,
-       -0.2f, 0.8f, -2.0f,
+        1.f, -1.f, 0.0f,
+        1.f, 1.f, 0.0f,
+       -1.f, 1.f, 0.0f,
+       -1.f, -1.f, 0.0f,
+        1.f, -1.f, 0.0f,
+       -1.f, 1.f, 0.0f,
+//        // Square 3
+//        1.8f, 0.0f, -4.0f,
+//        1.8f, 1.8f, -4.0f,
+//        0.8f, 1.8f, -4.0f,
+//        0.8f, 0.0f, -4.0f,
+//        1.8f, 0.0f, -4.0f,
+//        0.8f, 1.8f, -4.0f,
+//        // Square 2
+//        0.8f, -0.2f, -2.0f,
+//        0.8f, 0.8f, -2.0f,
+//       -0.2f, 0.8f, -2.0f,
+//       -0.2f, -0.2f, -2.0f,
+//        0.8f, -0.2f, -2.0f,
+//       -0.2f, 0.8f, -2.0f,
     };
 
     glGenVertexArrays(1, &m_vaoID);
@@ -254,15 +291,22 @@ void View::initSquare()
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertexBufferData), vertexBufferData, GL_STATIC_DRAW);
 
-    glEnableVertexAttribArray(vertexLocation1);
-    glVertexAttribPointer(vertexLocation1,
-                          3,
-                          GL_FLOAT,
-                          GL_FALSE,
-                          0,
-                          (void*) 0);
-    glEnableVertexAttribArray(vertexLocation2);
-    glVertexAttribPointer(vertexLocation2,
+//    glEnableVertexAttribArray(vertexLocation1);
+//    glVertexAttribPointer(vertexLocation1,
+//                          3,
+//                          GL_FLOAT,
+//                          GL_FALSE,
+//                          0,
+//                          (void*) 0);
+//    glEnableVertexAttribArray(vertexLocation2);
+//    glVertexAttribPointer(vertexLocation2,
+//                          3,
+//                          GL_FLOAT,
+//                          GL_FALSE,
+//                          0,
+//                          (void*) 0);
+    glEnableVertexAttribArray(vertexLocation3);
+    glVertexAttribPointer(vertexLocation3,
                           3,
                           GL_FLOAT,
                           GL_FALSE,
@@ -396,12 +440,8 @@ void View::tick()
         m_camera->translate(-m_camera->getLook()*m_moveSpeed*seconds);
     }
 
-    // TODO: Implement the demo update here
-    // position at time 0: y = 1, z = 2
-    // opposite position: y = -1, z = -2
-
     float timeMsec = time.currentTime().msec() + time.currentTime().second() * 1000;
-    float piTime = timeMsec * (2 * 3.1415926 / 1200000.0); // loop every two minutes?
+    float piTime = timeMsec * (2 * 3.1415926 / 240000.0); // loop every two minutes?
     float adjustTimeY = glm::cos(piTime);
     float adjustTimeZ = glm::sin(piTime);
     float newY = adjustTimeY * ORBIT_Y;
@@ -409,7 +449,7 @@ void View::tick()
 
     m_sunCamera->orientLook(glm::vec4(ORBIT_X, newY, newZ, 0),
                             glm::vec4(-ORBIT_X, 0 - newY, 0 - newZ, 0),
-                            glm::vec4(0, 1, 0, 0));
+                            glm::vec4(1, 0, 0, 0));
 
     // Flag this view for repainting (Qt will call paintGL() soon after)
     update();
@@ -493,6 +533,14 @@ void View::sendTextures(GLint shader) {
     glUniform1i(dirtLoc, 4);
     glBindTexture(GL_TEXTURE_2D, dirtTex);
     m_dirtTex = dirtTex;
+
+    glActiveTexture(GL_TEXTURE5);
+    std::string starsPath = ":/shaders/starfield.JPG";
+    GLuint starsTex = loadTexture(QString::fromStdString(starsPath));
+    GLint starsLoc = glGetUniformLocation(m_skyboxShader, "starsTexture");
+    glUniform1i(starsLoc, 5);
+    glBindTexture(GL_TEXTURE_2D, starsTex);
+    m_starsTex = starsTex;
 
     glActiveTexture(GL_TEXTURE0);
 }
